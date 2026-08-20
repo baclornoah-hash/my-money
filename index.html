@@ -657,7 +657,97 @@ th {
         </select>
 
     </div>
+<!-- ALLOCATION SETTINGS -->
 
+<div class="section" style="margin-bottom:15px;">
+
+    <div class="section-head">
+        <h2>Allocation Settings</h2>
+        <span class="muted">
+            Adjust how every Cash In is divided
+        </span>
+    </div>
+
+    <div class="allocation">
+
+        <div class="alloc">
+            <div class="alloc-top">
+                <span>NEEDS</span>
+                <input
+                    type="number"
+                    id="needsPercent"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="50"
+                    onchange="updateAllocationSettings()"
+                    style="width:70px;"
+                >
+                <span>%</span>
+            </div>
+        </div>
+
+        <div class="alloc">
+            <div class="alloc-top">
+                <span>WANTS</span>
+                <input
+                    type="number"
+                    id="wantsPercent"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="30"
+                    onchange="updateAllocationSettings()"
+                    style="width:70px;"
+                >
+                <span>%</span>
+            </div>
+        </div>
+
+        <div class="alloc">
+            <div class="alloc-top">
+                <span>SAVINGS</span>
+                <input
+                    type="number"
+                    id="savingsPercent"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="10"
+                    onchange="updateAllocationSettings()"
+                    style="width:70px;"
+                >
+                <span>%</span>
+            </div>
+        </div>
+
+        <div class="alloc">
+            <div class="alloc-top">
+                <span>TITHES</span>
+                <input
+                    type="number"
+                    id="tithesPercent"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value="10"
+                    onchange="updateAllocationSettings()"
+                    style="width:70px;"
+                >
+                <span>%</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div
+        id="allocationTotal"
+        class="muted"
+        style="margin-top:12px;">
+        Total: 100%
+    </div>
+
+</div>
 
     <!-- DASHBOARD -->
 
@@ -1595,19 +1685,114 @@ function setTransactionType(type) {
    ALLOCATION
    ========================================================= */
 
+let allocationSettings =
+    JSON.parse(
+        localStorage.getItem("myMoneyAllocation") ||
+        '{"needs":50,"wants":30,"savings":10,"tithes":10}'
+    );
+
+
 function allocation(amount) {
 
     return {
 
-        needs: amount * 0.50,
+        needs:
+            amount *
+            allocationSettings.needs /
+            100,
 
-        wants: amount * 0.30,
+        wants:
+            amount *
+            allocationSettings.wants /
+            100,
 
-        savings: amount * 0.10,
+        savings:
+            amount *
+            allocationSettings.savings /
+            100,
 
-        tithes: amount * 0.10
+        tithes:
+            amount *
+            allocationSettings.tithes /
+            100
 
     };
+
+}
+
+    function updateAllocationSettings() {
+
+    const needs =
+        Number(
+            document.getElementById("needsPercent").value
+        ) || 0;
+
+    const wants =
+        Number(
+            document.getElementById("wantsPercent").value
+        ) || 0;
+
+    const savings =
+        Number(
+            document.getElementById("savingsPercent").value
+        ) || 0;
+
+    const tithes =
+        Number(
+            document.getElementById("tithesPercent").value
+        ) || 0;
+
+
+    const total =
+        needs +
+        wants +
+        savings +
+        tithes;
+
+
+    const totalDisplay =
+        document.getElementById("allocationTotal");
+
+
+    if (total !== 100) {
+
+        totalDisplay.textContent =
+            "Total: " +
+            total +
+            "% — Must equal 100%";
+
+        totalDisplay.style.color =
+            "#a8483b";
+
+        return;
+
+    }
+
+
+    allocationSettings = {
+        needs: needs,
+        wants: wants,
+        savings: savings,
+        tithes: tithes
+    };
+
+
+    localStorage.setItem(
+        "myMoneyAllocation",
+        JSON.stringify(allocationSettings)
+    );
+
+
+    totalDisplay.textContent =
+        "Total: 100% ✓";
+
+    totalDisplay.style.color =
+        "#4f7659";
+
+
+    updateAllocationLabels();
+
+    render();
 
 }
 
