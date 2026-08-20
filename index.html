@@ -2196,19 +2196,76 @@ function allocation(amount) {
 function updateAllocationSettings() {
 
     const needs =
-        Number(document.getElementById("needsPercent").value) || 0;
+        Number(
+            document.getElementById("needsPercent").value
+        ) || 0;
 
     const wants =
-        Number(document.getElementById("wantsPercent").value) || 0;
+        Number(
+            document.getElementById("wantsPercent").value
+        ) || 0;
 
     const savings =
-        Number(document.getElementById("savingsPercent").value) || 0;
+        Number(
+            document.getElementById("savingsPercent").value
+        ) || 0;
 
     const tithes =
-        Number(document.getElementById("tithesPercent").value) || 0;
+        Number(
+            document.getElementById("tithesPercent").value
+        ) || 0;
+
+    const total =
+        needs +
+        wants +
+        savings +
+        tithes;
+
+    const totalDisplay =
+        document.getElementById("allocationTotal");
+
+    if (total !== 100) {
+
+        totalDisplay.textContent =
+            "Total: " + total + "% — Must equal 100%";
+
+        totalDisplay.style.color =
+            "#a8483b";
+
+        return;
+    }
+
+    allocationSettings = {
+        needs: needs,
+        wants: wants,
+        savings: savings,
+        tithes: tithes
+    };
+
+    localStorage.setItem(
+        "myMoneyAllocation",
+        JSON.stringify(allocationSettings)
+    );
+
+    totalDisplay.textContent =
+        "Total: 100% ✓";
+
+    totalDisplay.style.color =
+        "#4f7659";
+
+    updateAllocationLabels();
+
+    updatePreview();
+
+    render();
+}
 
 
-    function checkTreatingOthers() {
+/* =========================================================
+   TREATING OTHERS
+   ========================================================= */
+
+function checkTreatingOthers() {
 
     const item =
         document
@@ -2223,49 +2280,6 @@ function updateAllocationSettings() {
         item === "treating others"
         ? "block"
         : "none";
-}
-
-
-    if (total !== 100) {
-
-        totalDisplay.textContent =
-            "Total: " + total + "% — Must equal 100%";
-
-        totalDisplay.style.color =
-            "#a8483b";
-
-        return;
-
-    }
-
-
-    allocationSettings = {
-        needs: needs,
-        wants: wants,
-        savings: savings,
-        tithes: tithes
-    };
-
-
-    localStorage.setItem(
-        "myMoneyAllocation",
-        JSON.stringify(allocationSettings)
-    );
-
-
-    totalDisplay.textContent =
-        "Total: 100% ✓";
-
-    totalDisplay.style.color =
-        "#4f7659";
-
-
-    updateAllocationLabels();
-
-    updatePreview();
-
-    render();
-
 }
 
 
