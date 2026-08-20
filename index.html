@@ -633,6 +633,35 @@ th {
 
 <div class="container">
 
+    <!-- CURRENCY SETTINGS -->
+
+    <div class="section" style="margin-bottom:15px;">
+
+        <div class="section-head">
+            <h2>Currency</h2>
+            <span class="muted">Choose your display currency</span>
+        </div>
+
+        <select
+            id="currencySelect"
+            onchange="changeCurrency()">
+
+            <option value="PHP">🇵🇭 PHP — ₱ Philippine Peso</option>
+            <option value="USD">🇺🇸 USD — $ US Dollar</option>
+            <option value="EUR">🇪🇺 EUR — € Euro</option>
+            <option value="GBP">🇬🇧 GBP — £ British Pound</option>
+            <option value="JPY">🇯🇵 JPY — ¥ Japanese Yen</option>
+            <option value="KRW">🇰🇷 KRW — ₩ Korean Won</option>
+            <option value="IDR">🇮🇩 IDR — Rp Indonesian Rupiah</option>
+            <option value="AUD">🇦🇺 AUD — A$ Australian Dollar</option>
+            <option value="CAD">🇨🇦 CAD — C$ Canadian Dollar</option>
+            <option value="SGD">🇸🇬 SGD — S$ Singapore Dollar</option>
+
+        </select>
+
+    </div>
+
+
     <!-- DASHBOARD -->
 
     <div class="dashboard">
@@ -1360,13 +1389,77 @@ const expenseItems = [
    MONEY
    ========================================================= */
 
+let currency = localStorage.getItem("myMoneyCurrency") || "PHP";
+
+const currencySettings = {
+    PHP: {
+        locale: "en-PH",
+        symbol: "₱"
+    },
+
+    USD: {
+        locale: "en-US",
+        symbol: "$"
+    },
+
+    EUR: {
+        locale: "en-DE",
+        symbol: "€"
+    },
+
+    GBP: {
+        locale: "en-GB",
+        symbol: "£"
+    },
+
+    JPY: {
+        locale: "ja-JP",
+        symbol: "¥"
+    },
+
+    KRW: {
+        locale: "ko-KR",
+        symbol: "₩"
+    },
+
+    IDR: {
+        locale: "id-ID",
+        symbol: "Rp"
+    },
+
+    AUD: {
+        locale: "en-AU",
+        symbol: "A$"
+    },
+
+    CAD: {
+        locale: "en-CA",
+        symbol: "CA$"
+    },
+
+    SGD: {
+        locale: "en-SG",
+        symbol: "S$"
+    }
+};
+
+
 function money(value) {
 
+    const settings =
+        currencySettings[currency]
+        || currencySettings.PHP;
+
     return new Intl.NumberFormat(
-        "en-PH",
+        settings.locale,
         {
-            style:"currency",
-            currency:"PHP"
+            style: "currency",
+            currency: currency,
+            minimumFractionDigits:
+                currency === "JPY" ||
+                currency === "KRW"
+                ? 0
+                : 2
         }
     ).format(Number(value) || 0);
 
