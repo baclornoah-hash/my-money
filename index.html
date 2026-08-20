@@ -2003,7 +2003,16 @@ const currencySettings = {
     SGD: {
         locale: "en-SG",
         symbol: "S$"
-    }
+    },
+    KHR: {
+    locale: "km-KH",
+    symbol: "៛"
+},
+
+MMK: {
+    locale: "my-MM",
+    symbol: "K"
+}
 };
     
 function money(value) {
@@ -2167,12 +2176,6 @@ let allocationSettings =
         '{"needs":50,"wants":30,"savings":10,"tithes":10}'
     );
 
-    let allocationSettings =
-    JSON.parse(
-        localStorage.getItem("myMoneyAllocation") ||
-        '{"needs":50,"wants":30,"savings":10,"tithes":10}'
-    );
-
 
 function allocation(amount) {
 
@@ -2205,15 +2208,22 @@ function updateAllocationSettings() {
         Number(document.getElementById("tithesPercent").value) || 0;
 
 
-    const total =
-        needs +
-        wants +
-        savings +
-        tithes;
+    function checkTreatingOthers() {
 
+    const item =
+        document
+        .getElementById("item")
+        .value
+        .trim()
+        .toLowerCase();
 
-    const totalDisplay =
-        document.getElementById("allocationTotal");
+    document
+        .getElementById("personGroup")
+        .style.display =
+        item === "treating others"
+        ? "block"
+        : "none";
+}
 
 
     if (total !== 100) {
