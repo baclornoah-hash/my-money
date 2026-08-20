@@ -2196,7 +2196,103 @@ function allocation(amount) {
 
 }
 
-    function updateAllocationSettings() {
+    function updateAllocationSettings() 
+   function updateAllocationLabels() {
+
+    const needs =
+        allocationSettings.needs;
+
+    const wants =
+        allocationSettings.wants;
+
+    const savings =
+        allocationSettings.savings;
+
+    const tithes =
+        allocationSettings.tithes;
+
+
+    const allocationSection =
+        document.querySelectorAll(
+            ".section"
+        );
+
+
+    document.getElementById("needsPercent").value =
+        needs;
+
+    document.getElementById("wantsPercent").value =
+        wants;
+
+    document.getElementById("savingsPercent").value =
+        savings;
+
+    document.getElementById("tithesPercent").value =
+        tithes;
+
+
+    const allocationCards =
+        document.querySelectorAll(
+            ".allocation"
+        );
+
+
+    if (allocationCards.length < 2) {
+        return;
+    }
+
+
+    const cards =
+        allocationCards[1]
+        .querySelectorAll(".alloc");
+
+
+    if (cards.length >= 4) {
+
+        cards[0]
+            .querySelector(".alloc-top span:nth-child(2)")
+            .textContent =
+            needs + "%";
+
+        cards[1]
+            .querySelector(".alloc-top span:nth-child(2)")
+            .textContent =
+            wants + "%";
+
+        cards[2]
+            .querySelector(".alloc-top span:nth-child(2)")
+            .textContent =
+            savings + "%";
+
+        cards[3]
+            .querySelector(".alloc-top span:nth-child(2)")
+            .textContent =
+            tithes + "%";
+
+
+        cards[0]
+            .querySelector(".progress div")
+            .style.width =
+            needs + "%";
+
+        cards[1]
+            .querySelector(".progress div")
+            .style.width =
+            wants + "%";
+
+        cards[2]
+            .querySelector(".progress div")
+            .style.width =
+            savings + "%";
+
+        cards[3]
+            .querySelector(".progress div")
+            .style.width =
+            tithes + "%";
+
+    }
+
+}
 
     const needs =
         Number(
@@ -5426,6 +5522,19 @@ if (goalModal) {
 /* =========================================================
    INITIAL RENDER
    ========================================================= */
+document.getElementById("needsPercent").value =
+    allocationSettings.needs;
+
+document.getElementById("wantsPercent").value =
+    allocationSettings.wants;
+
+document.getElementById("savingsPercent").value =
+    allocationSettings.savings;
+
+document.getElementById("tithesPercent").value =
+    allocationSettings.tithes;
+
+updateAllocationLabels();
 
 render();
 renderGoals();
