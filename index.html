@@ -5308,6 +5308,7 @@ function renderGoals() {
 
 
                         ${
+    ${
     goal.description
     ? `
         <div
@@ -5320,18 +5321,6 @@ function renderGoals() {
     `
     : ""
 }
-                            <div
-                                class="muted"
-                                style="margin-top:8px;">
-
-                                ${escapeHTML(
-                                    goal.description
-                                )}
-
-                            </div>
-                            `
-                            : ""
-                        }
 
                     </div>
 
