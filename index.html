@@ -2188,6 +2188,28 @@ function allocation(amount) {
 
 }
 
+    function updatePreview() {
+
+    const amount =
+        Number(
+            document.getElementById("amount").value
+        ) || 0;
+
+    const a = allocation(amount);
+
+    document.getElementById("previewNeeds").textContent =
+        money(a.needs);
+
+    document.getElementById("previewWants").textContent =
+        money(a.wants);
+
+    document.getElementById("previewSavings").textContent =
+        money(a.savings);
+
+    document.getElementById("previewTithes").textContent =
+        money(a.tithes);
+}
+
 
 /* =========================================================
    UPDATE ALLOCATION SETTINGS
