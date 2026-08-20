@@ -352,6 +352,27 @@ th {
     font-size:16px;
 }
 
+/* FUTURE / PLANNED TRANSACTIONS */
+
+.planned-transaction {
+    color: #b8a99f;
+    background: #faf4ef;
+}
+
+.planned-transaction td {
+    color: #b8a99f;
+}
+
+.planned-transaction .green-text,
+.planned-transaction .red-text,
+.planned-transaction .brown-text {
+    color: #b8a99f;
+}
+
+.planned-transaction .delete {
+    color: #b8a99f;
+}
+    
 .empty {
     text-align:center;
     padding:30px;
@@ -2085,8 +2106,15 @@ function renderTransactions(list) {
                 : "red-text";
 
 
-            return `
-            <tr>
+            const isPlanned =
+    new Date(t.date + "T00:00:00") >
+    new Date(
+        new Date().toISOString().split("T")[0] +
+        "T00:00:00"
+    );
+
+return `
+    <tr class="${isPlanned ? "planned-transaction" : ""}">
 
                 <td>
                     ${formatDate(t.date)}
