@@ -643,8 +643,8 @@ th {
         </div>
 
         <select
-            id="currencySelect"
-            onchange="changeCurrency()">
+    id="currencySelect"
+    onchange="changeCurrency(this.value)">
 
             <option value="PHP">🇵🇭 PHP — ₱ Philippine Peso</option>
             <option value="USD">🇺🇸 USD — $ US Dollar</option>
@@ -1443,7 +1443,17 @@ const currencySettings = {
     }
 };
 
+let currency = localStorage.getItem("myMoneyCurrency") || "PHP";
 
+const currencySettings = {
+    // your existing currencies...
+};
+
+let baseCurrency =
+    localStorage.getItem("myMoneyBaseCurrency") || "PHP";
+
+let exchangeRate = 1;
+    
 function money(value) {
 
     const settings =
@@ -1462,6 +1472,24 @@ function money(value) {
                 : 2
         }
     ).format(Number(value) || 0);
+
+}
+
+
+/* =========================================================
+   CHANGE CURRENCY
+   ========================================================= */
+
+function changeCurrency(value) {
+
+    currency = value;
+
+    localStorage.setItem(
+        "myMoneyCurrency",
+        currency
+    );
+
+    render();
 
 }
 
