@@ -1,1 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Money Dashboard</title>
 
+<!-- SheetJS: Enables real Excel XLSX/XLS import and export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<style>
+:root {
+    --brown:#5a3826;
+    --dark:#241712;
+    --terracotta:#b85f3d;
+    --terracotta-light:#d48768;
+    --cream:#f5eee8;
+    --white:#fffaf6;
+    --black:#17120f;
+    --muted:#776b63;
+    --line:#dfd0c5;
+    --green:#4f7659;
+    --red:#a8483b;
+    --gold:#ad8240;
+    --blue:#536d86;
+}
+
+* {
+    box-sizing:border-box;
+}
+
+body {
+    margin:0;
+    background:var(--cream);
+    color:var(--black);
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+button,input,select {
+    font:inherit;
+}
+
+button {
+    cursor:pointer;
+}
+
+header {
+    background:var(--dark);
+    color:white;
+    padding:25px 20px;
+}
+
+.header-inner {
+    max-width:1400px;
+    margin:auto;
+}
+
+.logo {
+    font-size:29px;
+    font-weight:900;
+}
+
+.subtitle {
+    margin-top:6px;
+    color:#d8c8bd;
+}
+
+.container {
+    max-width:1400px;
+    margin:auto;
+    padding:22px;
+}
+
+/* TOP CARDS */
+
+.dashboard {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:18px;
+}
+
+.card {
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 5px 18px rgba(50,30,20,.06);
+}
+
+.label {
+    color:var(--muted);
+    font-size:11px;
+    font-weight:bold;
+    letter-spacing:.5px;
+}
+
+.value {
+    font-size:27px;
+    font-weight:900;
+    margin-top:7px;
+}
+
+.balance {
+    color:var(--brown);
+}
+
+.income {
+    color:var(--green);
+}
+
+.expense {
+    color:var(--red);
+}
+
+.saving-color {
+    color:var(--green);
+}
+
+/* ALLOCATION */
+
+.section {
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.section-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.section-head h2 {
+    margin:0;
+    font-size:20px;
+}
+
+.muted {
+    color:var(--muted);
+    font-size:12px;
+}
+
+.allocation {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+}
+
+.alloc {
+    padding:18px;
+    background:#f5ece6;
+    border-radius:15px;
+}
+
+.alloc-top {
+    display:flex;
+    justify-content:space-between;
+    font-weight:bold;
+}
+
+.alloc-amount {
+    font-size:21px;
+    font-weight:900;
+    margin-top:8px;
+}
+
+.progress {
+    height:8px;
+    margin-top:12px;
+    border-radius:10px;
+    overflow:hidden;
+    background:#dfd3cc;
+}
+
+.progress div {
+    height:100%;
+}
+
+.needs-bar {
+    background:var(--brown);
+}
+
+.wants-bar {
+    background:var(--terracotta);
+}
+
+.savings-bar {
+    background:var(--green);
+}
+
+.tithes-bar {
+    background:var(--gold);
+}
+
+/* BUTTONS */
+
+.btn {
+    border:0;
+    padding:10px 14px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+.btn-primary {
+    background:var(--terracotta);
+    color:white;
+}
+
+.btn-dark {
+    background:var(--brown);
+    color:white;
+}
+
+.btn-green {
+    background:var(--green);
+    color:white;
+}
+
+.btn-red {
+    background:var(--red);
+    color:white;
+}
+
+.btn-blue {
+    background:var(--blue);
+    color:white;
+}
+
+.btn-light {
+    background:#eaded6;
+    color:var(--black);
+}
+
+/* FILTERS */
+
+.filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-bottom:20px;
+}
+
+input,
+select {
+    border:1px solid var(--line);
+    background:white;
+    border-radius:9px;
+    padding:10px 12px;
+    outline:none;
+}
+
+input:focus,
+select:focus {
+    border-color:var(--terracotta);
+}
+
+/* CHART */
+
+.chart {
+    width:100%;
+    height:340px;
+}
+
+canvas {
+    width:100%;
+    height:100%;
+}
+
+/* TWO COLUMNS */
+
+.two {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+/* BREAKDOWN */
+
+.item-grid {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.item-card {
+    background:#f3e8e1;
+    border-radius:12px;
+    padding:14px;
+}
+
+.item-card strong {
+    display:block;
+    margin-bottom:6px;
+}
+
+.item-card span {
+    color:var(--terracotta);
+    font-size:17px;
+    font-weight:900;
+}
+
+/* TABLE */
+
+.table-wrap {
+    width:100%;
+    overflow-x:auto;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,
+td {
+    padding:12px 8px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    white-space:nowrap;
+}
+
+th {
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+}
+
+.green-text {
+    color:var(--green);
+    font-weight:bold;
+}
+
+.red-text {
+    color:var(--red);
+    font-weight:bold;
+}
+
+.brown-text {
+    color:var(--brown);
+    font-weight:bold;
+}
+
+.delete {
+    background:transparent;
+    color:var(--red);
+    border:0;
+    font-size:16px;
+}
+
+.empty {
+    text-align:center;
+    padding:30px;
+    color:var(--muted);
+}
+
+/* BACKUP */
+
+.backup-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.backup-box {
+    background:#f4e9e2;
+    border-radius:14px;
+    padding:17px;
+}
+
+.backup-box h3 {
+    margin-top:0;
+}
+
+.backup-box p {
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+}
+
+/* MODAL */
+
+.modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:rgba(20,13,10,.72);
+    justify-content:center;
+    align-items:center;
+    padding:15px;
+}
+
+.modal.active {
+    display:flex;
+}
+
+.modal-box {
+    width:100%;
+    max-width:570px;
+    max-height:92vh;
+    overflow-y:auto;
+    background:var(--white);
+    border-radius:20px;
+    padding:25px;
+}
+
+.modal-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.modal-head h2 {
+    margin:0;
+}
+
+.close {
+    background:transparent;
+    border:0;
+    font-size:25px;
+}
+
+.form-group {
+    margin-bottom:15px;
+}
+
+.form-group label {
+    display:block;
+    margin-bottom:6px;
+    font-size:11px;
+    font-weight:bold;
+    color:var(--muted);
+}
+
+.form-group input,
+.form-group select {
+    width:100%;
+}
+
+.amount-input {
+    font-size:25px;
+    font-weight:bold;
+}
+
+.type-buttons {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.type-btn {
+    border:0;
+    padding:13px;
+    border-radius:10px;
+    background:#eaded5;
+    font-weight:bold;
+}
+
+.type-in-active {
+    background:var(--green);
+    color:white;
+}
+
+.type-out-active {
+    background:var(--terracotta);
+    color:white;
+}
+
+.disabled-category {
+    opacity:.45;
+    pointer-events:none;
+}
+
+.preview {
+    background:#f0e3db;
+    border-radius:13px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.preview-title {
+    font-weight:bold;
+    margin-bottom:7px;
+}
+
+.preview-row {
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+}
+
+.warning {
+    background:#fff0e8;
+    border:1px solid #e2b5a1;
+    border-radius:10px;
+    padding:10px;
+    color:#7a3d2b;
+    font-size:12px;
+    margin-bottom:15px;
+}
+
+/* FILE INPUT */
+
+.file-input {
+    display:none;
+}
+
+.file-label {
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:10px;
+    background:var(--brown);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* FLOATING PLUS */
+
+.add {
+    position:fixed;
+    right:25px;
+    bottom:25px;
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    border:0;
+    background:var(--terracotta);
+    color:white;
+    font-size:34px;
+    box-shadow:0 8px 25px rgba(70,35,20,.35);
+    z-index:500;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:950px) {
+
+    .dashboard,
+    .allocation {
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .item-grid {
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .two {
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:600px) {
+
+    .container {
+        padding:12px;
+    }
+
+    .dashboard,
+    .allocation {
+        grid-template-columns:1fr 1fr;
+        gap:9px;
+    }
+
+    .card,
+    .alloc {
+        padding:14px;
+    }
+
+    .value {
+        font-size:20px;
+    }
+
+    .item-grid {
+        grid-template-columns:1fr 1fr;
+    }
+
+    .backup-grid {
+        grid-template-columns:1fr;
+    }
+
+    .section {
+        padding:15px;
+    }
+
+    .logo {
+        font-size:23px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="logo">MY MONEY</div>
+        <div class="subtitle">
+            Cash Flow • Needs • Wants • Savings • Tithes
+        </div>
+    </div>
+</header>
+
+
+<div class="container">
+
+    <!-- DASHBOARD -->
+
+    <div class="dashboard">
+
+        <div class="card">
+            <div class="label">REMAINING BALANCE</div>
+            <div class="value balance" id="balance">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">TOTAL CASH IN</div>
+            <div class="value income" id="totalIn">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">TOTAL CASH OUT</div>
+            <div class="value expense" id="totalOut">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">SAVINGS ALLOCATED</div>
+            <div class="value saving-color" id="totalSavings">₱0.00</div>
+        </div>
+
+    </div>
+
+
+    <!-- AUTOMATIC 50/30/10/10 -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Automatic Cash-In Allocation</h2>
+            <span class="muted">
+                Every Cash In is divided automatically
+            </span>
+        </div>
+
+        <div class="allocation">
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>NEEDS</span>
+                    <span>50%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="needsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="needs-bar"
+                         style="width:50%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>WANTS</span>
+                    <span>30%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="wantsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="wants-bar"
+                         style="width:30%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>SAVINGS</span>
+                    <span>10%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="savingsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="savings-bar"
+                         style="width:10%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>TITHES</span>
+                    <span>10%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="tithesAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="tithes-bar"
+                         style="width:10%">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- FILTERS -->
+
+    <div class="filters">
+
+        <input
+            type="date"
+            id="filterDate"
+            onchange="render()"
+        >
+
+        <select
+            id="filterMonth"
+            onchange="render()">
+            <option value="all">All Months</option>
+        </select>
+
+        <select
+            id="filterYear"
+            onchange="render()">
+            <option value="all">All Years</option>
+        </select>
+
+        <select
+            id="filterType"
+            onchange="render()">
+
+            <option value="all">
+                Cash In + Cash Out
+            </option>
+
+            <option value="income">
+                Cash In
+            </option>
+
+            <option value="expense">
+                Cash Out
+            </option>
+
+        </select>
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search..."
+            oninput="render()"
+        >
+
+    </div>
+
+
+    <!-- CASH FLOW -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Cash Flow</h2>
+
+            <span class="muted">
+                Green = Cash In • Terracotta = Cash Out
+            </span>
+        </div>
+
+        <div class="chart">
+            <canvas id="cashFlowChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- EXPENSE BREAKDOWN -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Expense Breakdown</h2>
+
+            <span class="muted">
+                See exactly how much goes to every item
+            </span>
+        </div>
+
+        <div
+            class="item-grid"
+            id="expenseBreakdown">
+        </div>
+
+    </div>
+
+
+    <!-- MONTHLY / YEARLY -->
+
+    <div class="two">
+
+        <div class="section">
+
+            <div class="section-head">
+                <h2>Monthly Comparison</h2>
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Cash In</th>
+                            <th>Cash Out</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="monthlyTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="section-head">
+                <h2>Yearly Comparison</h2>
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Cash In</th>
+                            <th>Cash Out</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="yearlyTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BACKUP / RESTORE -->
+
+    <div class="section">
+
+        <div class="section-head">
+
+            <h2>Backup & Restore</h2>
+
+            <span class="muted">
+                Keep a copy of your financial data
+            </span>
+
+        </div>
+
+
+        <div class="backup-grid">
+
+            <div class="backup-box">
+
+                <h3>Export Backup</h3>
+
+                <p>
+                    Download your transactions as CSV or
+                    Excel spreadsheet. Keep the downloaded
+                    file somewhere safe so you can restore
+                    your data later.
+                </p>
+
+                <button
+                    class="btn btn-dark"
+                    onclick="exportCSV()">
+                    Download CSV
+                </button>
+
+                <button
+                    class="btn btn-green"
+                    onclick="exportXLSX()">
+                    Download Excel
+                </button>
+
+            </div>
+
+
+            <div class="backup-box">
+
+                <h3>Restore Backup</h3>
+
+                <p>
+                    Select a CSV, Excel XLSX/XLS file, or a
+                    spreadsheet exported from Google Sheets.
+                    The system will actually read the file
+                    and import the transactions into this
+                    dashboard.
+                </p>
+
+                <label
+                    for="backupFile"
+                    class="file-label">
+                    Restore Backup
+                </label>
+
+                <input
+                    class="file-input"
+                    type="file"
+                    id="backupFile"
+                    accept=".csv,.xlsx,.xls"
+                    onchange="handleBackupFile(event)"
+                >
+
+                <div
+                    id="restoreStatus"
+                    class="muted"
+                    style="margin-top:10px;">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TRANSACTIONS -->
+
+    <div class="section">
+
+        <div class="section-head">
+
+            <h2>Transactions</h2>
+
+            <span
+                class="muted"
+                id="transactionCount">
+                0 transactions
+            </span>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Cash Flow</th>
+                        <th>Remaining Balance</th>
+                        <th></th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="transactionTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PLUS -->
+
+<button
+    class="add"
+    onclick="openModal()">
+    +
+</button>
+
+
+<!-- ADD TRANSACTION MODAL -->
+
+<div
+    class="modal"
+    id="transactionModal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h2>Add Transaction</h2>
+
+            <button
+                class="close"
+                onclick="closeModal()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="form-group">
+
+            <label>DATE</label>
+
+            <input
+                type="date"
+                id="date"
+            >
+
+        </div>
+
+
+        <!-- AMOUNT -->
+
+        <div class="form-group">
+
+            <label>AMOUNT</label>
+
+            <input
+                type="number"
+                id="amount"
+                class="amount-input"
+                min="0"
+                step="0.01"
+                placeholder="₱0.00"
+                oninput="updatePreview()"
+            >
+
+        </div>
+
+
+        <!-- CASH IN / OUT -->
+
+        <div class="form-group">
+
+            <label>TRANSACTION TYPE</label>
+
+            <div class="type-buttons">
+
+                <button
+                    id="cashInBtn"
+                    class="type-btn type-in-active"
+                    onclick="setTransactionType('income')">
+                    + CASH IN
+                </button>
+
+                <button
+                    id="cashOutBtn"
+                    class="type-btn"
+                    onclick="setTransactionType('expense')">
+                    − CASH OUT
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- CATEGORY -->
+
+        <div class="form-group">
+
+            <label>
+                CATEGORY
+            </label>
+
+            <select
+                id="category"
+                onchange="updatePreview()">
+
+                <option value="Needs">
+                    Needs
+                </option>
+
+                <option value="Wants">
+                    Wants
+                </option>
+
+                <option value="Savings">
+                    Savings
+                </option>
+
+                <option value="Tithes">
+                    Tithes
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- ITEM -->
+
+        <div class="form-group">
+
+            <label>
+                ITEM / EXPENSE
+            </label>
+
+            <input
+                list="expenseItems"
+                id="item"
+                placeholder="Type or select..."
+                oninput="checkTreatingOthers()"
+            >
+
+ 
