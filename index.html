@@ -870,9 +870,7 @@ th {
             <option value="SGD">🇸🇬 SGD — S$ Singapore Dollar</option>
             <option value="KHR">🇰🇭 KHR — Cambodian Riel</option>
             <option value="MMK">🇲🇲 MMK — Myanmar Kyat</option>
- }
 
-};s
         </select>
 
     </div>
@@ -6686,5 +6684,291 @@ render();
 
 </script>
 
+    <div class="goal-modal" id="goalModal">
+    <div class="goal-modal-box">
+
+        <div class="goal-modal-head">
+            <h2>🧭 Add Financial Goal</h2>
+            <button class="close" onclick="closeGoalModal()">×</button>
+        </div>
+
+        <div class="goal-form-group">
+            <label>GOAL NAME</label>
+            <input type="text" id="goalName" placeholder="e.g. New House">
+        </div>
+
+        <div class="goal-form-group">
+            <label>EMOJI</label>
+            <input
+                type="text"
+                id="goalEmoji"
+                class="goal-emoji-input"
+                value="🎯"
+                maxlength="2"
+            >
+        </div>
+
+        <div class="goal-form-group">
+            <label>CATEGORY</label>
+            <select id="goalCategory">
+                <option value="House">🏠 House</option>
+                <option value="Church">⛪ Church Commitment</option>
+                <option value="Emergency">🛟 Emergency Fund</option>
+                <option value="Education">🎓 Education</option>
+                <option value="Travel">✈️ Travel</option>
+                <option value="Business">💼 Business</option>
+                <option value="Family">👨‍👩‍👧 Family</option>
+                <option value="Personal">⭐ Personal</option>
+                <option value="Other">📌 Other</option>
+            </select>
+        </div>
+
+        <div class="goal-form-group">
+            <label>TARGET AMOUNT</label>
+            <input
+                type="number"
+                id="goalTarget"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+            >
+        </div>
+
+        <div class="goal-form-group">
+            <label>ALREADY SAVED</label>
+            <input
+                type="number"
+                id="goalSaved"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                value="0"
+            >
+        </div>
+
+        <div class="goal-form-group">
+            <label>PRIORITY</label>
+            <select id="goalPriority">
+                <option value="High">🔴 High</option>
+                <option value="Medium" selected>🟡 Medium</option>
+                <option value="Low">🟢 Low</option>
+            </select>
+        </div>
+
+        <button
+            class="btn btn-primary"
+            style="width:100%;"
+            onclick="saveGoal()"
+        >
+            Add Goal
+        </button>
+
+    </div>
+</div>
+
+    <script>
+
+let goals = JSON.parse(localStorage.getItem("moneyGoals")) || [];
+
+function openGoalModal() {
+    document.getElementById("goalModal").classList.add("active");
+}
+
+function closeGoalModal() {
+    document.getElementById("goalModal").classList.remove("active");
+}
+
+function saveGoal() {
+
+    const name = document.getElementById("goalName").value.trim();
+    const emoji = document.getElementById("goalEmoji").value.trim() || "🎯";
+    const category = document.getElementById("goalCategory").value;
+    const target = Number(document.getElementById("goalTarget").value);
+    const saved = Number(document.getElementById("goalSaved").value) || 0;
+    const priority = document.getElementById("goalPriority").value;
+
+    if (!name) {
+        alert("Please enter a goal name.");
+        return;
+    }
+
+    if (target <= 0) {
+        alert("Please enter a target amount.");
+        return;
+    }
+
+    const goal = {
+        id: Date.now(),
+        name,
+        emoji,
+        category,
+        target,
+        saved,
+        priority
+    };
+
+    goals.push(goal);
+
+    localStorage.setItem(
+        "moneyGoals",
+        JSON.stringify(goals)
+    );
+
+    renderGoals();
+
+    closeGoalModal();
+
+    document.getElementById("goalName").value = "";
+    document.getElementById("goalTarget").value = "";
+    document.getElementById("goalSaved").value = "0";
+}
+
+function deleteGoal(id) {
+
+    goals = goals.filter(goal => goal.id !== id);
+
+    localStorage.setItem(
+        "moneyGoals",
+        JSON.stringify(goals)
+    );
+
+    renderGoals();
+}
+
+function renderGoals() {
+
+    const grid = document.getElementById("goalsGrid");
+
+    if (!goals.length) {
+
+        grid.innerHTML = `
+            <div class="goal-empty">
+                No financial goals yet.<br>
+                Click <strong>+ Add Goal</strong> to create your first goal.
+            </div>
+        `;
+
+        return;
+    }
+
+    grid.innerHTML = goals.map(goal => {
+
+        const percent = Math.min(
+            100,
+            (goal.saved / goal.target) * 100
+        );
+
+        const remaining = Math.max(
+            0,
+            goal.target - goal.saved
+        );
+
+        return `
+            <div class="goal-card">
+
+                <div class="goal-card-head">
+
+                    <div>
+                        <div class="goal-icon">
+                            ${goal.emoji}
+                        </div>
+
+                        <div class="goal-name">
+                            ${escapeHTML(goal.name)}
+                        </div>
+
+                        <div class="goal-category">
+                            ${escapeHTML(goal.category)}
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="goal-priority">
+                            ${escapeHTML(goal.priority)}
+                        </span>
+
+                        <button
+                            class="goal-delete"
+                            onclick="deleteGoal(${goal.id})"
+                        >
+                            ×
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="goal-amounts">
+
+                    <div>
+                        <div class="muted">SAVED</div>
+                        <div class="goal-saved">
+                            ${formatMoney(goal.saved)}
+                        </div>
+                    </div>
+
+                    <div style="text-align:right;">
+                        <div class="muted">TARGET</div>
+                        <div class="goal-target">
+                            ${formatMoney(goal.target)}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="goal-progress">
+                    <div
+                        class="goal-progress-bar"
+                        style="width:${percent}%"
+                    ></div>
+                </div>
+
+                <div class="goal-percent">
+                    ${percent.toFixed(1)}% complete
+                </div>
+
+                <div class="goal-details">
+
+                    <div class="goal-detail-row">
+                        <span>Remaining</span>
+                        <strong>
+                            ${formatMoney(remaining)}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+function formatMoney(amount) {
+
+    const currency =
+        localStorage.getItem("currency") || "PHP";
+
+    return new Intl.NumberFormat(
+        undefined,
+        {
+            style: "currency",
+            currency: currency
+        }
+    ).format(amount);
+}
+
+function escapeHTML(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+}
+
+renderGoals();
+
+</script>
+    
 </body>
 </html>
