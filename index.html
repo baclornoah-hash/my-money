@@ -616,6 +616,221 @@ th {
     }
 
 }
+
+    /* =========================================================
+   LIFE PLANNER / FINANCIAL GOALS
+   ========================================================= */
+
+.goals-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+}
+
+.goal-card {
+    background:#f5ece6;
+    border:1px solid var(--line);
+    border-radius:15px;
+    padding:17px;
+    position:relative;
+}
+
+.goal-card-head {
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:flex-start;
+}
+
+.goal-icon {
+    font-size:28px;
+}
+
+.goal-name {
+    font-size:17px;
+    font-weight:900;
+    margin-top:5px;
+}
+
+.goal-category {
+    color:var(--muted);
+    font-size:11px;
+    margin-top:3px;
+}
+
+.goal-priority {
+    font-size:10px;
+    font-weight:bold;
+    padding:5px 8px;
+    border-radius:20px;
+    background:#eaded6;
+}
+
+.goal-amounts {
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:18px;
+}
+
+.goal-saved,
+.goal-target {
+    font-weight:900;
+}
+
+.goal-saved {
+    color:var(--green);
+}
+
+.goal-target {
+    color:var(--brown);
+}
+
+.goal-progress {
+    height:9px;
+    background:#dfd3cc;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:12px;
+}
+
+.goal-progress-bar {
+    height:100%;
+    background:var(--green);
+    width:0%;
+    transition:width .3s ease;
+}
+
+.goal-percent {
+    margin-top:8px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.goal-details {
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+}
+
+.goal-detail-row {
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    padding:4px 0;
+}
+
+.goal-detail-row span:first-child {
+    color:var(--muted);
+}
+
+.goal-delete {
+    border:0;
+    background:transparent;
+    color:var(--red);
+    font-size:16px;
+    cursor:pointer;
+}
+
+.goal-empty {
+    grid-column:1/-1;
+    text-align:center;
+    padding:30px;
+    color:var(--muted);
+}
+
+.goal-add-button {
+    border:0;
+    background:var(--terracotta);
+    color:white;
+    border-radius:10px;
+    padding:10px 14px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.goal-add-button:hover {
+    opacity:.9;
+}
+
+/* GOAL MODAL */
+
+.goal-modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9998;
+    background:rgba(20,13,10,.72);
+    justify-content:center;
+    align-items:center;
+    padding:15px;
+}
+
+.goal-modal.active {
+    display:flex;
+}
+
+.goal-modal-box {
+    width:100%;
+    max-width:570px;
+    max-height:92vh;
+    overflow-y:auto;
+    background:var(--white);
+    border-radius:20px;
+    padding:25px;
+}
+
+.goal-modal-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.goal-modal-head h2 {
+    margin:0;
+}
+
+.goal-form-group {
+    margin-bottom:15px;
+}
+
+.goal-form-group label {
+    display:block;
+    margin-bottom:6px;
+    font-size:11px;
+    font-weight:bold;
+    color:var(--muted);
+}
+
+.goal-form-group input,
+.goal-form-group select {
+    width:100%;
+}
+
+.goal-emoji-input {
+    font-size:25px;
+    text-align:center;
+}
+
+/* MOBILE */
+
+@media(max-width:950px) {
+
+    .goals-grid {
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:600px) {
+
+    .goals-grid {
+        grid-template-columns:1fr;
+    }
+
+}
 </style>
 </head>
 
@@ -779,6 +994,47 @@ th {
 
     </div>
 
+    <!-- =====================================================
+     LIFE PLANNER / FINANCIAL GOALS
+     ===================================================== -->
+
+<div class="section">
+
+    <div class="section-head">
+
+        <div>
+
+            <h2>🧭 Life Planner</h2>
+
+            <div
+                class="muted"
+                style="margin-top:5px;">
+
+                Turn your money into goals for
+                the life you want to build.
+
+            </div>
+
+        </div>
+
+        <button
+            class="goal-add-button"
+            onclick="openGoalModal()">
+
+            + Add Goal
+
+        </button>
+
+    </div>
+
+
+    <div
+        class="goals-grid"
+        id="goalsGrid">
+
+    </div>
+
+</div>
 
     <!-- AUTOMATIC 50/30/10/10 -->
 
@@ -1430,7 +1686,226 @@ th {
 
 </div>
 
+<!-- =====================================================
+     ADD GOAL MODAL
+     ===================================================== -->
 
+<div
+    class="goal-modal"
+    id="goalModal">
+
+    <div class="goal-modal-box">
+
+        <div class="goal-modal-head">
+
+            <h2>🎯 Add Financial Goal</h2>
+
+            <button
+                class="close"
+                onclick="closeGoalModal()">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <!-- GOAL NAME -->
+
+        <div class="goal-form-group">
+
+            <label>GOAL NAME</label>
+
+            <input
+                type="text"
+                id="goalName"
+                placeholder="Example: House"
+            >
+
+        </div>
+
+
+        <!-- ICON -->
+
+        <div class="goal-form-group">
+
+            <label>ICON</label>
+
+            <input
+                type="text"
+                id="goalIcon"
+                class="goal-emoji-input"
+                value="🎯"
+                maxlength="2"
+            >
+
+        </div>
+
+
+        <!-- CATEGORY -->
+
+        <div class="goal-form-group">
+
+            <label>CATEGORY</label>
+
+            <select id="goalCategory">
+
+                <option value="House">
+                    🏠 House / Home
+                </option>
+
+                <option value="Church">
+                    ⛪ Church Commitment
+                </option>
+
+                <option value="Education">
+                    🎓 Education
+                </option>
+
+                <option value="Emergency">
+                    🏥 Emergency Fund
+                </option>
+
+                <option value="Business">
+                    💼 Business / Career
+                </option>
+
+                <option value="Vehicle">
+                    🚗 Vehicle
+                </option>
+
+                <option value="Technology">
+                    💻 Technology
+                </option>
+
+                <option value="Travel">
+                    ✈️ Travel
+                </option>
+
+                <option value="Family">
+                    👨‍👩‍👧 Family
+                </option>
+
+                <option value="Wedding">
+                    💍 Wedding
+                </option>
+
+                <option value="Savings">
+                    💰 General Savings
+                </option>
+
+                <option value="Custom">
+                    ✏️ Custom
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- TARGET -->
+
+        <div class="goal-form-group">
+
+            <label>TARGET AMOUNT</label>
+
+            <input
+                type="number"
+                id="goalTarget"
+                class="amount-input"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+            >
+
+        </div>
+
+
+        <!-- CURRENT SAVINGS -->
+
+        <div class="goal-form-group">
+
+            <label>CURRENT AMOUNT SAVED</label>
+
+            <input
+                type="number"
+                id="goalSaved"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+            >
+
+        </div>
+
+
+        <!-- TARGET DATE -->
+
+        <div class="goal-form-group">
+
+            <label>TARGET DATE</label>
+
+            <input
+                type="date"
+                id="goalDate"
+            >
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="goal-form-group">
+
+            <label>PRIORITY</label>
+
+            <select id="goalPriority">
+
+                <option value="Essential">
+                    🔴 Essential
+                </option>
+
+                <option value="Important">
+                    🟠 Important
+                </option>
+
+                <option value="Nice to Have">
+                    🟢 Nice to Have
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <div class="goal-form-group">
+
+            <label>NOTE</label>
+
+            <input
+                type="text"
+                id="goalDescription"
+                placeholder="Optional..."
+            >
+
+        </div>
+
+
+        <button
+            class="btn btn-primary"
+            style="width:100%;"
+            onclick="addGoal()">
+
+            ADD GOAL
+
+        </button>
+
+    </div>
+
+</div>
+    
 <script>
 
 /* =========================================================
@@ -3579,7 +4054,7 @@ function readExcel(file) {
                             );
 
 
-                        /*
+                        
                            First worksheet.
                            This supports normal Excel
                            spreadsheets and Google Sheets
@@ -4385,12 +4860,1827 @@ window.addEventListener(
     }
 );
 
+  /* =========================================================
+   FINANCIAL GOALS
+   ========================================================= */
+
+let financialGoals =
+    JSON.parse(
+        localStorage.getItem("myMoneyGoals") || "[]"
+    );
+
+
+/* =========================================================
+   SAVE GOALS
+   ========================================================= */
+
+function saveGoals() {
+
+    localStorage.setItem(
+        "myMoneyGoals",
+        JSON.stringify(financialGoals)
+    );
+
+}
+
+
+/* =========================================================
+   OPEN GOAL MODAL
+   ========================================================= */
+
+function openGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.add("active");
+
+}
+
+
+/* =========================================================
+   CLOSE GOAL MODAL
+   ========================================================= */
+
+function closeGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.remove("active");
+
+}
+
+
+/* =========================================================
+   ADD GOAL
+   ========================================================= */
+
+function addGoal() {
+
+    const name =
+        document
+        .getElementById("goalName")
+        .value
+        .trim();
+
+
+    const icon =
+        document
+        .getElementById("goalIcon")
+        .value
+        .trim() ||
+        "🎯";
+
+
+    const category =
+        document
+        .getElementById("goalCategory")
+        .value;
+
+
+    const target =
+        Number(
+            document
+            .getElementById("goalTarget")
+            .value
+        );
+
+
+    const saved =
+        Number(
+            document
+            .getElementById("goalSaved")
+            .value
+        ) || 0;
+
+
+    const targetDate =
+        document
+        .getElementById("goalDate")
+        .value;
+
+
+    const priority =
+        document
+        .getElementById("goalPriority")
+        .value;
+
+
+    const description =
+        document
+        .getElementById("goalDescription")
+        .value
+        .trim();
+
+
+    /* VALIDATION */
+
+    if (!name) {
+
+        alert(
+            "Please enter a goal name."
+        );
+
+        return;
+
+    }
+
+
+    if (!target || target <= 0) {
+
+        alert(
+            "Please enter a valid target amount."
+        );
+
+        return;
+
+    }
+
+
+    if (saved < 0) {
+
+        alert(
+            "Saved amount cannot be negative."
+        );
+
+        return;
+
+    }
+
+
+    if (saved > target) {
+
+        alert(
+            "Saved amount cannot be greater than the target."
+        );
+
+        return;
+
+    }
+
+
+    /* CREATE GOAL */
+
+    const goal = {
+
+        id:
+            "G-" +
+            Date.now() +
+            "-" +
+            Math.random()
+            .toString(36)
+            .substring(2,7),
+
+        name:name,
+
+        icon:icon,
+
+        category:category,
+
+        target:target,
+
+        saved:saved,
+
+        targetDate:targetDate,
+
+        priority:priority,
+
+        description:description
+
+    };
+
+
+    financialGoals.push(goal);
+
+
+    saveGoals();
+
+    resetGoalForm();
+
+    closeGoalModal();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   RESET GOAL FORM
+   ========================================================= */
+
+function resetGoalForm() {
+
+    document
+        .getElementById("goalName")
+        .value = "";
+
+    document
+        .getElementById("goalIcon")
+        .value = "🎯";
+
+    document
+        .getElementById("goalCategory")
+        .value = "House";
+
+    document
+        .getElementById("goalTarget")
+        .value = "";
+
+    document
+        .getElementById("goalSaved")
+        .value = "";
+
+    document
+        .getElementById("goalDate")
+        .value = "";
+
+    document
+        .getElementById("goalPriority")
+        .value = "Essential";
+
+    document
+        .getElementById("goalDescription")
+        .value = "";
+
+}
+
+
+/* =========================================================
+   RENDER GOALS
+   ========================================================= */
+
+function renderGoals() {
+
+    const grid =
+        document.getElementById(
+            "goalsGrid"
+        );
+
+
+    if (!financialGoals.length) {
+
+        grid.innerHTML = `
+
+            <div class="goal-empty">
+
+                🎯 No financial goals yet.
+
+                <br><br>
+
+                Add your first goal and start
+                planning your future.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        financialGoals
+        .map(goal => {
+
+            const target =
+                Number(goal.target) || 0;
+
+
+            const saved =
+                Number(goal.saved) || 0;
+
+
+            const remaining =
+                Math.max(
+                    target - saved,
+                    0
+                );
+
+
+            const percent =
+                target > 0
+                ? Math.min(
+                    (saved / target) * 100,
+                    100
+                )
+                : 0;
+
+
+            const monthly =
+                calculateMonthlyGoalAmount(
+                    remaining,
+                    goal.targetDate
+                );
+
+
+            return `
+
+                <div class="goal-card">
+
+                    <div class="goal-card-head">
+
+                        <div>
+
+                            <div class="goal-icon">
+                                ${escapeHTML(goal.icon)}
+                            </div>
+
+                            <div class="goal-name">
+                                ${escapeHTML(goal.name)}
+                            </div>
+
+                            <div class="goal-category">
+                                ${escapeHTML(goal.category)}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="goal-priority">
+                                ${escapeHTML(goal.priority)}
+                            </div>
+
+                            <button
+                                class="goal-delete"
+                                onclick="deleteGoal('${escapeJS(goal.id)}')"
+                                title="Delete goal">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-amounts">
+
+                        <div>
+
+                            <div class="muted">
+                                SAVED
+                            </div>
+
+                            <div class="goal-saved">
+                                ${money(saved)}
+                            </div>
+
+                        </div>
+
+
+                        <div style="text-align:right;">
+
+                            <div class="muted">
+                                TARGET
+                            </div>
+
+                            <div class="goal-target">
+                                ${money(target)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-progress">
+
+                        <div
+                            class="goal-progress-bar"
+                            style="width:${percent}%;">
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-percent">
+
+                        ${percent.toFixed(1)}% complete
+
+                    </div>
+
+
+                    <div class="goal-details">
+
+                        <div class="goal-detail-row">
+
+                            <span>Remaining</span>
+
+                            <strong>
+                                ${money(remaining)}
+                            </strong>
+
+                        </div>
+
+
+                        ${
+                            goal.targetDate
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Target date</span>
+
+                                <strong>
+                                    ${formatDate(goal.targetDate)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            monthly !== null
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Monthly target</span>
+
+                                <strong>
+                                    ${money(monthly)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            goal.description
+                            ? `
+                            <div
+                                class="muted"
+                                style="margin-top:8px;">
+
+                                ${escapeHTML(
+                                    goal.description
+                                )}
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   MONTHLY GOAL CALCULATION
+   ========================================================= */
+
+function calculateMonthlyGoalAmount(
+    remaining,
+    targetDate
+) {
+
+    if (
+        remaining <= 0 ||
+        !targetDate
+    ) {
+
+        return remaining <= 0
+            ? 0
+            : null;
+
+    }
+
+
+    const today =
+        new Date();
+
+
+    const target =
+        new Date(
+            targetDate +
+            "T00:00:00"
+        );
+
+
+    if (target <= today) {
+
+        return remaining;
+
+    }
+
+
+    const months =
+        (
+            target.getFullYear() -
+            today.getFullYear()
+        ) * 12
+        +
+        (
+            target.getMonth() -
+            today.getMonth()
+        );
+
+
+    const monthsRemaining =
+        Math.max(
+            months,
+            1
+        );
+
+
+    return (
+        remaining /
+        monthsRemaining
+    );
+
+}
+
+
+/* =========================================================
+   DELETE GOAL
+   ========================================================= */
+
+function deleteGoal(id) {
+
+    if (
+        !confirm(
+            "Delete this financial goal?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    financialGoals =
+        financialGoals.filter(
+            goal =>
+                String(goal.id) !==
+                String(id)
+        );
+
+
+    saveGoals();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   GOAL MODAL OUTSIDE CLICK
+   ========================================================= */
+
+const goalModal =
+    document.getElementById(
+        "goalModal"
+    );
+
+
+if (goalModal) {
+
+    goalModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target ===
+                this
+            ) {
+
+                closeGoalModal();
+
+            }
+
+        }
+    );
+
+       /* =========================================================
+   FINANCIAL GOALS
+   ========================================================= */
+
+let financialGoals =
+    JSON.parse(
+        localStorage.getItem("myMoneyGoals") || "[]"
+    );
+
+
+/* =========================================================
+   SAVE GOALS
+   ========================================================= */
+
+function saveGoals() {
+
+    localStorage.setItem(
+        "myMoneyGoals",
+        JSON.stringify(financialGoals)
+    );
+
+}
+
+
+/* =========================================================
+   OPEN GOAL MODAL
+   ========================================================= */
+
+function openGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.add("active");
+
+}
+
+
+/* =========================================================
+   CLOSE GOAL MODAL
+   ========================================================= */
+
+function closeGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.remove("active");
+
+}
+
+
+/* =========================================================
+   ADD GOAL
+   ========================================================= */
+
+function addGoal() {
+
+    const name =
+        document
+        .getElementById("goalName")
+        .value
+        .trim();
+
+
+    const icon =
+        document
+        .getElementById("goalIcon")
+        .value
+        .trim() ||
+        "🎯";
+
+
+    const category =
+        document
+        .getElementById("goalCategory")
+        .value;
+
+
+    const target =
+        Number(
+            document
+            .getElementById("goalTarget")
+            .value
+        );
+
+
+    const saved =
+        Number(
+            document
+            .getElementById("goalSaved")
+            .value
+        ) || 0;
+
+
+    const targetDate =
+        document
+        .getElementById("goalDate")
+        .value;
+
+
+    const priority =
+        document
+        .getElementById("goalPriority")
+        .value;
+
+
+    const description =
+        document
+        .getElementById("goalDescription")
+        .value
+        .trim();
+
+
+    /* VALIDATION */
+
+    if (!name) {
+
+        alert(
+            "Please enter a goal name."
+        );
+
+        return;
+
+    }
+
+
+    if (!target || target <= 0) {
+
+        alert(
+            "Please enter a valid target amount."
+        );
+
+        return;
+
+    }
+
+
+    if (saved < 0) {
+
+        alert(
+            "Saved amount cannot be negative."
+        );
+
+        return;
+
+    }
+
+
+    if (saved > target) {
+
+        alert(
+            "Saved amount cannot be greater than the target."
+        );
+
+        return;
+
+    }
+
+
+    /* CREATE GOAL */
+
+    const goal = {
+
+        id:
+            "G-" +
+            Date.now() +
+            "-" +
+            Math.random()
+            .toString(36)
+            .substring(2,7),
+
+        name:name,
+
+        icon:icon,
+
+        category:category,
+
+        target:target,
+
+        saved:saved,
+
+        targetDate:targetDate,
+
+        priority:priority,
+
+        description:description
+
+    };
+
+
+    financialGoals.push(goal);
+
+
+    saveGoals();
+
+    resetGoalForm();
+
+    closeGoalModal();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   RESET GOAL FORM
+   ========================================================= */
+
+function resetGoalForm() {
+
+    document
+        .getElementById("goalName")
+        .value = "";
+
+    document
+        .getElementById("goalIcon")
+        .value = "🎯";
+
+    document
+        .getElementById("goalCategory")
+        .value = "House";
+
+    document
+        .getElementById("goalTarget")
+        .value = "";
+
+    document
+        .getElementById("goalSaved")
+        .value = "";
+
+    document
+        .getElementById("goalDate")
+        .value = "";
+
+    document
+        .getElementById("goalPriority")
+        .value = "Essential";
+
+    document
+        .getElementById("goalDescription")
+        .value = "";
+
+}
+
+
+/* =========================================================
+   RENDER GOALS
+   ========================================================= */
+
+function renderGoals() {
+
+    const grid =
+        document.getElementById(
+            "goalsGrid"
+        );
+
+
+    if (!financialGoals.length) {
+
+        grid.innerHTML = `
+
+            <div class="goal-empty">
+
+                🎯 No financial goals yet.
+
+                <br><br>
+
+                Add your first goal and start
+                planning your future.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        financialGoals
+        .map(goal => {
+
+            const target =
+                Number(goal.target) || 0;
+
+
+            const saved =
+                Number(goal.saved) || 0;
+
+
+            const remaining =
+                Math.max(
+                    target - saved,
+                    0
+                );
+
+
+            const percent =
+                target > 0
+                ? Math.min(
+                    (saved / target) * 100,
+                    100
+                )
+                : 0;
+
+
+            const monthly =
+                calculateMonthlyGoalAmount(
+                    remaining,
+                    goal.targetDate
+                );
+
+
+            return `
+
+                <div class="goal-card">
+
+                    <div class="goal-card-head">
+
+                        <div>
+
+                            <div class="goal-icon">
+                                ${escapeHTML(goal.icon)}
+                            </div>
+
+                            <div class="goal-name">
+                                ${escapeHTML(goal.name)}
+                            </div>
+
+                            <div class="goal-category">
+                                ${escapeHTML(goal.category)}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="goal-priority">
+                                ${escapeHTML(goal.priority)}
+                            </div>
+
+                            <button
+                                class="goal-delete"
+                                onclick="deleteGoal('${escapeJS(goal.id)}')"
+                                title="Delete goal">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-amounts">
+
+                        <div>
+
+                            <div class="muted">
+                                SAVED
+                            </div>
+
+                            <div class="goal-saved">
+                                ${money(saved)}
+                            </div>
+
+                        </div>
+
+
+                        <div style="text-align:right;">
+
+                            <div class="muted">
+                                TARGET
+                            </div>
+
+                            <div class="goal-target">
+                                ${money(target)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-progress">
+
+                        <div
+                            class="goal-progress-bar"
+                            style="width:${percent}%;">
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-percent">
+
+                        ${percent.toFixed(1)}% complete
+
+                    </div>
+
+
+                    <div class="goal-details">
+
+                        <div class="goal-detail-row">
+
+                            <span>Remaining</span>
+
+                            <strong>
+                                ${money(remaining)}
+                            </strong>
+
+                        </div>
+
+
+                        ${
+                            goal.targetDate
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Target date</span>
+
+                                <strong>
+                                    ${formatDate(goal.targetDate)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            monthly !== null
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Monthly target</span>
+
+                                <strong>
+                                    ${money(monthly)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            goal.description
+                            ? `
+                            <div
+                                class="muted"
+                                style="margin-top:8px;">
+
+                                ${escapeHTML(
+                                    goal.description
+                                )}
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   MONTHLY GOAL CALCULATION
+   ========================================================= */
+
+function calculateMonthlyGoalAmount(
+    remaining,
+    targetDate
+) {
+
+    if (
+        remaining <= 0 ||
+        !targetDate
+    ) {
+
+        return remaining <= 0
+            ? 0
+            : null;
+
+    }
+
+
+    const today =
+        new Date();
+
+
+    const target =
+        new Date(
+            targetDate +
+            "T00:00:00"
+        );
+
+
+    if (target <= today) {
+
+        return remaining;
+
+    }
+
+
+    const months =
+        (
+            target.getFullYear() -
+            today.getFullYear()
+        ) * 12
+        +
+        (
+            target.getMonth() -
+            today.getMonth()
+        );
+
+
+    const monthsRemaining =
+        Math.max(
+            months,
+            1
+        );
+
+
+    return (
+        remaining /
+        monthsRemaining
+    );
+
+}
+
+
+/* =========================================================
+   DELETE GOAL
+   ========================================================= */
+
+function deleteGoal(id) {
+
+    if (
+        !confirm(
+            "Delete this financial goal?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    financialGoals =
+        financialGoals.filter(
+            goal =>
+                String(goal.id) !==
+                String(id)
+        );
+
+
+    saveGoals();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   GOAL MODAL OUTSIDE CLICK
+   ========================================================= */
+
+const goalModal =
+    document.getElementById(
+        "goalModal"
+    );
+
+
+if (goalModal) {
+
+    goalModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target ===
+                this
+            ) {
+
+                closeGoalModal();
+
+            }
+
+        }
+    );
+
+/* =========================================================
+   FINANCIAL GOALS
+   ========================================================= */
+
+let financialGoals =
+    JSON.parse(
+        localStorage.getItem("myMoneyGoals") || "[]"
+    );
+
+
+/* =========================================================
+   SAVE GOALS
+   ========================================================= */
+
+function saveGoals() {
+
+    localStorage.setItem(
+        "myMoneyGoals",
+        JSON.stringify(financialGoals)
+    );
+
+}
+
+
+/* =========================================================
+   OPEN GOAL MODAL
+   ========================================================= */
+
+function openGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.add("active");
+
+}
+
+
+/* =========================================================
+   CLOSE GOAL MODAL
+   ========================================================= */
+
+function closeGoalModal() {
+
+    document
+        .getElementById("goalModal")
+        .classList.remove("active");
+
+}
+
+
+/* =========================================================
+   ADD GOAL
+   ========================================================= */
+
+function addGoal() {
+
+    const name =
+        document
+        .getElementById("goalName")
+        .value
+        .trim();
+
+
+    const icon =
+        document
+        .getElementById("goalIcon")
+        .value
+        .trim() ||
+        "🎯";
+
+
+    const category =
+        document
+        .getElementById("goalCategory")
+        .value;
+
+
+    const target =
+        Number(
+            document
+            .getElementById("goalTarget")
+            .value
+        );
+
+
+    const saved =
+        Number(
+            document
+            .getElementById("goalSaved")
+            .value
+        ) || 0;
+
+
+    const targetDate =
+        document
+        .getElementById("goalDate")
+        .value;
+
+
+    const priority =
+        document
+        .getElementById("goalPriority")
+        .value;
+
+
+    const description =
+        document
+        .getElementById("goalDescription")
+        .value
+        .trim();
+
+
+    /* VALIDATION */
+
+    if (!name) {
+
+        alert(
+            "Please enter a goal name."
+        );
+
+        return;
+
+    }
+
+
+    if (!target || target <= 0) {
+
+        alert(
+            "Please enter a valid target amount."
+        );
+
+        return;
+
+    }
+
+
+    if (saved < 0) {
+
+        alert(
+            "Saved amount cannot be negative."
+        );
+
+        return;
+
+    }
+
+
+    if (saved > target) {
+
+        alert(
+            "Saved amount cannot be greater than the target."
+        );
+
+        return;
+
+    }
+
+
+    /* CREATE GOAL */
+
+    const goal = {
+
+        id:
+            "G-" +
+            Date.now() +
+            "-" +
+            Math.random()
+            .toString(36)
+            .substring(2,7),
+
+        name:name,
+
+        icon:icon,
+
+        category:category,
+
+        target:target,
+
+        saved:saved,
+
+        targetDate:targetDate,
+
+        priority:priority,
+
+        description:description
+
+    };
+
+
+    financialGoals.push(goal);
+
+
+    saveGoals();
+
+    resetGoalForm();
+
+    closeGoalModal();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   RESET GOAL FORM
+   ========================================================= */
+
+function resetGoalForm() {
+
+    document
+        .getElementById("goalName")
+        .value = "";
+
+    document
+        .getElementById("goalIcon")
+        .value = "🎯";
+
+    document
+        .getElementById("goalCategory")
+        .value = "House";
+
+    document
+        .getElementById("goalTarget")
+        .value = "";
+
+    document
+        .getElementById("goalSaved")
+        .value = "";
+
+    document
+        .getElementById("goalDate")
+        .value = "";
+
+    document
+        .getElementById("goalPriority")
+        .value = "Essential";
+
+    document
+        .getElementById("goalDescription")
+        .value = "";
+
+}
+
+
+/* =========================================================
+   RENDER GOALS
+   ========================================================= */
+
+function renderGoals() {
+
+    const grid =
+        document.getElementById(
+            "goalsGrid"
+        );
+
+
+    if (!financialGoals.length) {
+
+        grid.innerHTML = `
+
+            <div class="goal-empty">
+
+                🎯 No financial goals yet.
+
+                <br><br>
+
+                Add your first goal and start
+                planning your future.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        financialGoals
+        .map(goal => {
+
+            const target =
+                Number(goal.target) || 0;
+
+
+            const saved =
+                Number(goal.saved) || 0;
+
+
+            const remaining =
+                Math.max(
+                    target - saved,
+                    0
+                );
+
+
+            const percent =
+                target > 0
+                ? Math.min(
+                    (saved / target) * 100,
+                    100
+                )
+                : 0;
+
+
+            const monthly =
+                calculateMonthlyGoalAmount(
+                    remaining,
+                    goal.targetDate
+                );
+
+
+            return `
+
+                <div class="goal-card">
+
+                    <div class="goal-card-head">
+
+                        <div>
+
+                            <div class="goal-icon">
+                                ${escapeHTML(goal.icon)}
+                            </div>
+
+                            <div class="goal-name">
+                                ${escapeHTML(goal.name)}
+                            </div>
+
+                            <div class="goal-category">
+                                ${escapeHTML(goal.category)}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <div class="goal-priority">
+                                ${escapeHTML(goal.priority)}
+                            </div>
+
+                            <button
+                                class="goal-delete"
+                                onclick="deleteGoal('${escapeJS(goal.id)}')"
+                                title="Delete goal">
+
+                                ✕
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-amounts">
+
+                        <div>
+
+                            <div class="muted">
+                                SAVED
+                            </div>
+
+                            <div class="goal-saved">
+                                ${money(saved)}
+                            </div>
+
+                        </div>
+
+
+                        <div style="text-align:right;">
+
+                            <div class="muted">
+                                TARGET
+                            </div>
+
+                            <div class="goal-target">
+                                ${money(target)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-progress">
+
+                        <div
+                            class="goal-progress-bar"
+                            style="width:${percent}%;">
+                        </div>
+
+                    </div>
+
+
+                    <div class="goal-percent">
+
+                        ${percent.toFixed(1)}% complete
+
+                    </div>
+
+
+                    <div class="goal-details">
+
+                        <div class="goal-detail-row">
+
+                            <span>Remaining</span>
+
+                            <strong>
+                                ${money(remaining)}
+                            </strong>
+
+                        </div>
+
+
+                        ${
+                            goal.targetDate
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Target date</span>
+
+                                <strong>
+                                    ${formatDate(goal.targetDate)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            monthly !== null
+                            ? `
+                            <div class="goal-detail-row">
+
+                                <span>Monthly target</span>
+
+                                <strong>
+                                    ${money(monthly)}
+                                </strong>
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            goal.description
+                            ? `
+                            <div
+                                class="muted"
+                                style="margin-top:8px;">
+
+                                ${escapeHTML(
+                                    goal.description
+                                )}
+
+                            </div>
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                </div>
+
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   MONTHLY GOAL CALCULATION
+   ========================================================= */
+
+function calculateMonthlyGoalAmount(
+    remaining,
+    targetDate
+) {
+
+    if (
+        remaining <= 0 ||
+        !targetDate
+    ) {
+
+        return remaining <= 0
+            ? 0
+            : null;
+
+    }
+
+
+    const today =
+        new Date();
+
+
+    const target =
+        new Date(
+            targetDate +
+            "T00:00:00"
+        );
+
+
+    if (target <= today) {
+
+        return remaining;
+
+    }
+
+
+    const months =
+        (
+            target.getFullYear() -
+            today.getFullYear()
+        ) * 12
+        +
+        (
+            target.getMonth() -
+            today.getMonth()
+        );
+
+
+    const monthsRemaining =
+        Math.max(
+            months,
+            1
+        );
+
+
+    return (
+        remaining /
+        monthsRemaining
+    );
+
+}
+
+
+/* =========================================================
+   DELETE GOAL
+   ========================================================= */
+
+function deleteGoal(id) {
+
+    if (
+        !confirm(
+            "Delete this financial goal?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    financialGoals =
+        financialGoals.filter(
+            goal =>
+                String(goal.id) !==
+                String(id)
+        );
+
+
+    saveGoals();
+
+    renderGoals();
+
+}
+
+
+/* =========================================================
+   GOAL MODAL OUTSIDE CLICK
+   ========================================================= */
+
+const goalModal =
+    document.getElementById(
+        "goalModal"
+    );
+
+
+if (goalModal) {
+
+    goalModal.addEventListener(
+        "click",
+        function(event) {
+
+            if (
+                event.target ===
+                this
+            ) {
+
+                closeGoalModal();
+
+            }
+
+        }
+    );
+
+ 
 
 /* =========================================================
    START
    ========================================================= */
 
 document.getElementById("currencySelect").value = currency;
+
+renderGoals();
 
 render();
 
