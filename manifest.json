@@ -1,0 +1,22 @@
+{
+  "name": "My Money",
+  "short_name": "My Money",
+  "description": "Personal cash flow, needs, wants, savings, and tithes tracker.",
+  "start_url": "/my-money/",
+  "display": "standalone",
+  "background_color": "#f7efe7",
+  "theme_color": "#24160f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
