@@ -4035,22 +4035,16 @@ function escapeJS(text) {
    OUTSIDE MODAL CLICK
    ========================================================= */
 
-document
-    .getElementById("transactionModal")
-    .addEventListener(
-        "click",
-        function(event) {
+const transactionModal =
+    document.getElementById("transactionModal");
 
-            if(
-                event.target === this
-            ) {
-
-                closeModal();
-
-            }
-
+if (transactionModal) {
+    transactionModal.addEventListener("click", function(event) {
+        if (event.target === this) {
+            closeModal();
         }
-    );
+    });
+}
 
 
 /* =========================================================
