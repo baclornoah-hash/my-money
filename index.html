@@ -633,10 +633,6 @@ th {
 
 <div class="container">
 
-    <!-- CURRENCY SETTINGS -->
-
-<div class="section" style="margin-bottom:15px;">
-
     <div class="section-head">
         <h2>Currency</h2>
         <span class="muted">Choose your display currency</span>
@@ -1469,12 +1465,6 @@ const currencySettings = {
         locale: "en-SG",
         symbol: "S$"
     }
-};
-
-let currency = localStorage.getItem("myMoneyCurrency") || "PHP";
-
-const currencySettings = {
-    // your existing currencies...
 };
 
 let baseCurrency =
@@ -4242,6 +4232,8 @@ window.addEventListener(
 /* =========================================================
    START
    ========================================================= */
+
+document.getElementById("currencySelect").value = currency;
 
 render();
 
