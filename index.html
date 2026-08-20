@@ -5108,60 +5108,42 @@ function resetGoalForm() {
 function renderGoals() {
 
     const grid =
-        document.getElementById(
-            "goalsGrid"
-        );
+        document.getElementById("goalsGrid");
 
+    if (!grid) {
+        return;
+    }
 
     if (!financialGoals.length) {
 
         grid.innerHTML = `
-
             <div class="goal-empty">
-
                 🎯 No financial goals yet.
-
                 <br><br>
-
                 Add your first goal and start
                 planning your future.
-
             </div>
-
         `;
 
         return;
-
     }
 
-
     grid.innerHTML =
-        financialGoals
-        .map(goal => {
+        financialGoals.map(goal => {
 
             const target =
                 Number(goal.target) || 0;
 
-
             const saved =
                 Number(goal.saved) || 0;
 
-
             const remaining =
-                Math.max(
-                    target - saved,
-                    0
-                );
-
+                Math.max(target - saved, 0);
 
             const percent =
                 target > 0
-                ? Math.min(
-                    (saved / target) * 100,
-                    100
-                )
-                : 0;
-
+                    ? Math.min((saved / target) * 100, 100)
+                    : 0;
 
             const monthly =
                 calculateMonthlyGoalAmount(
@@ -5169,9 +5151,7 @@ function renderGoals() {
                     goal.targetDate
                 );
 
-
             return `
-
                 <div class="goal-card">
 
                     <div class="goal-card-head">
@@ -5179,44 +5159,39 @@ function renderGoals() {
                         <div>
 
                             <div class="goal-icon">
-                                ${escapeHTML(goal.icon)}
+                                ${escapeHTML(goal.icon || "🎯")}
                             </div>
 
                             <div class="goal-name">
-                                ${escapeHTML(goal.name)}
+                                ${escapeHTML(goal.name || "")}
                             </div>
 
                             <div class="goal-category">
-                                ${escapeHTML(goal.category)}
+                                ${escapeHTML(goal.category || "")}
                             </div>
 
                         </div>
 
-
                         <div>
 
                             <div class="goal-priority">
-                                ${escapeHTML(goal.priority)}
+                                ${escapeHTML(goal.priority || "")}
                             </div>
 
                             <button
                                 class="goal-delete"
                                 onclick="deleteGoal('${escapeJS(goal.id)}')"
                                 title="Delete goal">
-
                                 ✕
-
                             </button>
 
                         </div>
 
                     </div>
 
-
                     <div class="goal-amounts">
 
                         <div>
-
                             <div class="muted">
                                 SAVED
                             </div>
@@ -5224,9 +5199,7 @@ function renderGoals() {
                             <div class="goal-saved">
                                 ${money(saved)}
                             </div>
-
                         </div>
-
 
                         <div style="text-align:right;">
 
@@ -5242,7 +5215,6 @@ function renderGoals() {
 
                     </div>
 
-
                     <div class="goal-progress">
 
                         <div
@@ -5252,13 +5224,9 @@ function renderGoals() {
 
                     </div>
 
-
                     <div class="goal-percent">
-
                         ${percent.toFixed(1)}% complete
-
                     </div>
-
 
                     <div class="goal-details">
 
@@ -5272,67 +5240,59 @@ function renderGoals() {
 
                         </div>
 
-
                         ${
                             goal.targetDate
                             ? `
-                            <div class="goal-detail-row">
+                                <div class="goal-detail-row">
 
-                                <span>Target date</span>
+                                    <span>Target date</span>
 
-                                <strong>
-                                    ${formatDate(goal.targetDate)}
-                                </strong>
+                                    <strong>
+                                        ${formatDate(goal.targetDate)}
+                                    </strong>
 
-                            </div>
+                                </div>
                             `
                             : ""
                         }
-
 
                         ${
                             monthly !== null
                             ? `
-                            <div class="goal-detail-row">
+                                <div class="goal-detail-row">
 
-                                <span>Monthly target</span>
+                                    <span>Monthly target</span>
 
-                                <strong>
-                                    ${money(monthly)}
-                                </strong>
+                                    <strong>
+                                        ${money(monthly)}
+                                    </strong>
 
-                            </div>
+                                </div>
                             `
                             : ""
                         }
 
-
                         ${
-    ${
-    goal.description
-    ? `
-        <div
-            class="muted"
-            style="margin-top:8px;">
+                            goal.description
+                            ? `
+                                <div
+                                    class="muted"
+                                    style="margin-top:8px;">
 
-            ${escapeHTML(goal.description)}
+                                    ${escapeHTML(goal.description)}
 
-        </div>
-    `
-    : ""
-}
+                                </div>
+                            `
+                            : ""
+                        }
 
                     </div>
 
                 </div>
-
             `;
 
-        })
-        .join("");
-
+        }).join("");
 }
-
 
 /* =========================================================
    MONTHLY GOAL CALCULATION
