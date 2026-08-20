@@ -1026,10 +1026,9 @@ th {
 
 
     <div
-        class="goals-grid"
-        id="goalsGrid">
-
-    </div>
+    class="goals-grid"
+    id="goalsGrid">
+</div>
 
 </div>
 
@@ -1310,13 +1309,13 @@ th {
                     class="btn btn-dark"
                     onclick="exportCSV()">
                     Download CSV
-                </button>
+               
 
                 <button
                     class="btn btn-green"
                     onclick="exportXLSX()">
                     Download Excel
-                </button>
+               
 
             </div>
 
@@ -1432,7 +1431,7 @@ th {
                 class="close"
                 onclick="closeModal()">
                 ×
-            </button>
+           
 
         </div>
 
@@ -1483,14 +1482,14 @@ th {
                     class="type-btn type-in-active"
                     onclick="setTransactionType('income')">
                     + CASH IN
-                </button>
+               
 
                 <button
                     id="cashOutBtn"
                     class="type-btn"
                     onclick="setTransactionType('expense')">
                     − CASH OUT
-                </button>
+               
 
             </div>
 
@@ -1677,7 +1676,7 @@ th {
 
             ADD TRANSACTION
 
-        </button>
+       
 
     </div>
 
@@ -1703,7 +1702,7 @@ th {
 
                 ×
 
-            </button>
+           
 
         </div>
 
@@ -1889,7 +1888,7 @@ th {
 
         </div>
 
-
+addGoal()
         <button
             class="btn btn-primary"
             style="width:100%;"
@@ -2270,7 +2269,7 @@ function updateAllocationSettings() {
     );
 
     totalDisplay.textContent =
-        "Total: 100% ✓";
+"Total: 100% ✓";
 
     totalDisplay.style.color =
         "#4f7659";
@@ -2294,18 +2293,7 @@ function checkTreatingOthers() {
         .getElementById("item")
         .value
         .trim()
-        .toLowerCase();
-
-    document
-        .getElementById("personGroup")
-        .style.display =
-        item === "treating others"
-        ? "block"
-        : "none";
-}
-
-
-/* =========================================================
+        .t=====================================
    UPDATE ALLOCATION LABELS
    ========================================================= */
 
@@ -3654,6 +3642,7 @@ function drawChart(list) {
                 (dates.length-1) /
                 Math.max(
                     count-1,
+  nt-1,
                     1
                 )
             );
@@ -3687,19 +3676,19 @@ function drawChart(list) {
     ctx.fillStyle="#4f7659";
 
     ctx.fillText(
-        "● Cash In",
-        left,
-        18
-    );
+"Cash In",
+left,
+18
+);
 
 
     ctx.fillStyle="#b85f3d";
 
     ctx.fillText(
-        "● Cash Out",
-        left+85,
-        18
-    );
+"Cash Out",
+left + 85,
+18
+);
 
 }
 
@@ -5013,14 +5002,10 @@ function addGoal() {
         .value
         .trim();
 
-
     const icon =
-        document
-        .getElementById("goalIcon")
-        .value
-        .trim() ||
-        "🎯";
-
+document
+.getElementById("goalIcon")
+.value = "🎯";
 
     const category =
         document
