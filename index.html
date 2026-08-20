@@ -1151,4 +1151,4048 @@ th {
                 oninput="checkTreatingOthers()"
             >
 
+            <datalist id="expenseItems">
+
+                <option value="Food">
+                <option value="Data">
+                <option value="Rice">
+                <option value="Butane">
+                <option value="Cabinet">
+                <option value="Table">
+                <option value="Rent">
+                <option value="Haircut">
+                <option value="Commitment">
+                <option value="Contribution">
+                <option value="Entrance Fee">
+                <option value="Tuition Fee">
+                <option value="Water">
+                <option value="Trash Bag">
+                <option value="Soy Sauce">
+                <option value="Vinegar">
+                <option value="Salt">
+                <option value="Sugar">
+                <option value="Coffee">
+                <option value="Milk">
+                <option value="Snacks">
+                <option value="Tithes">
+                <option value="Transpo">
+                <option value="Clothing">
+                <option value="Drinks">
+                <option value="Treating Others">
+                <option value="Other">
+
+            </datalist>
+
+        </div>
+
+
+        <!-- PERSON -->
+
+        <div
+            class="form-group"
+            id="personGroup"
+            style="display:none;">
+
+            <label>
+                WHO DID YOU TREAT?
+            </label>
+
+            <input
+                type="text"
+                id="person"
+                placeholder="Example: Maria"
+            >
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <div class="form-group">
+
+            <label>
+                DESCRIPTION / NOTE
+            </label>
+
+            <input
+                type="text"
+                id="description"
+                placeholder="Optional..."
+            >
+
+        </div>
+
+
+        <!-- CASH IN PREVIEW -->
+
+        <div
+            class="preview"
+            id="allocationPreview">
+
+            <div class="preview-title">
+                Cash-In will automatically become:
+            </div>
+
+            <div class="preview-row">
+                <span>Needs — 50%</span>
+                <strong id="previewNeeds">
+                    ₱0.00
+                </strong>
+            </div>
+
+            <div class="preview-row">
+                <span>Wants — 30%</span>
+                <strong id="previewWants">
+                    ₱0.00
+                </strong>
+            </div>
+
+            <div class="preview-row">
+                <span>Savings — 10%</span>
+                <strong id="previewSavings">
+                    ₱0.00
+                </strong>
+            </div>
+
+            <div class="preview-row">
+                <span>Tithes — 10%</span>
+                <strong id="previewTithes">
+                    ₱0.00
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div
+            id="cashOutMessage"
+            class="warning"
+            style="display:none;">
+
+            Cash Out does not receive the 50/30/10/10
+            allocation. Choose the category where the
+            actual spending belongs.
+
+        </div>
+
+
+        <button
+            class="btn btn-primary"
+            style="width:100%;"
+            onclick="addTransaction()">
+
+            ADD TRANSACTION
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   DATA
+   ========================================================= */
+
+let transactions =
+    JSON.parse(
+        localStorage.getItem("myMoneyData") || "[]"
+    );
+
+let currentType = "income";
+
+
+const expenseItems = [
+    "Food",
+    "Data",
+    "Rice",
+    "Butane",
+    "Cabinet",
+    "Table",
+    "Rent",
+    "Haircut",
+    "Commitment",
+    "Contribution",
+    "Entrance Fee",
+    "Tuition Fee",
+    "Water",
+    "Trash Bag",
+    "Soy Sauce",
+    "Vinegar",
+    "Salt",
+    "Sugar",
+    "Coffee",
+    "Milk",
+    "Snacks",
+    "Tithes",
+    "Transpo",
+    "Clothing",
+    "Drinks",
+    "Treating Others",
+    "Other"
+];
+
+
+/* =========================================================
+   MONEY
+   ========================================================= */
+
+function money(value) {
+
+    return new Intl.NumberFormat(
+        "en-PH",
+        {
+            style:"currency",
+            currency:"PHP"
+        }
+    ).format(Number(value) || 0);
+
+}
+
+
+/* =========================================================
+   SAVE
+   ========================================================= */
+
+function saveData() {
+
+    localStorage.setItem(
+        "myMoneyData",
+        JSON.stringify(transactions)
+    );
+
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+function openModal() {
+
+    document
+        .getElementById("transactionModal")
+        .classList.add("active");
+
+    document
+        .getElementById("date")
+        .value =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+}
+
+
+function closeModal() {
+
+    document
+        .getElementById("transactionModal")
+        .classList.remove("active");
+
+}
+
+
+/* =========================================================
+   TYPE
+   ========================================================= */
+
+function setTransactionType(type) {
+
+    currentType = type;
+
+    const inBtn =
+        document.getElementById("cashInBtn");
+
+    const outBtn =
+        document.getElementById("cashOutBtn");
+
+    const category =
+        document.getElementById("category");
+
+    const preview =
+        document.getElementById("allocationPreview");
+
+    const message =
+        document.getElementById("cashOutMessage");
+
+
+    inBtn.className = "type-btn";
+
+    outBtn.className = "type-btn";
+
+
+    if (type === "income") {
+
+        inBtn.classList.add(
+            "type-in-active"
+        );
+
+        category.disabled = true;
+
+        category.classList.add(
+            "disabled-category"
+        );
+
+        preview.style.display = "block";
+
+        message.style.display = "none";
+
+    } else {
+
+        outBtn.classList.add(
+            "type-out-active"
+        );
+
+        category.disabled = false;
+
+        category.classList.remove(
+            "disabled-category"
+        );
+
+        preview.style.display = "none";
+
+        message.style.display = "block";
+
+    }
+
+
+    updatePreview();
+
+}
+
+
+/* =========================================================
+   ALLOCATION
+   ========================================================= */
+
+function allocation(amount) {
+
+    return {
+
+        needs: amount * 0.50,
+
+        wants: amount * 0.30,
+
+        savings: amount * 0.10,
+
+        tithes: amount * 0.10
+
+    };
+
+}
+
+
+function updatePreview() {
+
+    const amount =
+        Number(
+            document.getElementById("amount").value
+        ) || 0;
+
+
+    const a =
+        allocation(amount);
+
+
+    document.getElementById("previewNeeds")
+        .textContent =
+        money(a.needs);
+
+    document.getElementById("previewWants")
+        .textContent =
+        money(a.wants);
+
+    document.getElementById("previewSavings")
+        .textContent =
+        money(a.savings);
+
+    document.getElementById("previewTithes")
+        .textContent =
+        money(a.tithes);
+
+}
+
+
+/* =========================================================
+   TREATING OTHERS
+   ========================================================= */
+
+function checkTreatingOthers() {
+
+    const item =
+        document
+        .getElementById("item")
+        .value
+        .trim()
+        .toLowerCase();
+
+
+    document
+        .getElementById("personGroup")
+        .style.display =
+        item === "treating others"
+        ? "block"
+        : "none";
+
+}
+
+
+/* =========================================================
+   ADD
+   ========================================================= */
+
+function addTransaction() {
+
+    const date =
+        document.getElementById("date").value;
+
+    const amount =
+        Number(
+            document.getElementById("amount").value
+        );
+
+    const category =
+        document.getElementById("category").value;
+
+    const item =
+        document.getElementById("item")
+        .value
+        .trim();
+
+    const person =
+        document.getElementById("person")
+        .value
+        .trim();
+
+    const description =
+        document.getElementById("description")
+        .value
+        .trim();
+
+
+    if (!date) {
+
+        alert("Please enter a date.");
+
+        return;
+
+    }
+
+
+    if (!amount || amount <= 0) {
+
+        alert("Please enter a valid amount.");
+
+        return;
+
+    }
+
+
+    if (!item) {
+
+        alert("Please select or type an item.");
+
+        return;
+
+    }
+
+
+    let finalDescription =
+        description || item;
+
+
+    if (
+        item.toLowerCase() ===
+        "treating others"
+    ) {
+
+        if (person) {
+
+            finalDescription =
+                "Treating " +
+                person +
+                (
+                    description
+                    ? " — " + description
+                    : ""
+                );
+
+        }
+
+    }
+
+
+    /*
+       CASH IN:
+       The category selected in the form is ignored.
+       The transaction represents the full Cash In.
+       The dashboard later calculates 50/30/10/10.
+    */
+
+
+    const transaction = {
+
+        id:
+            "T-" +
+            Date.now() +
+            "-" +
+            Math.random()
+            .toString(36)
+            .substring(2,8),
+
+        date:date,
+
+        amount:amount,
+
+        type:currentType,
+
+        category:
+            currentType === "income"
+            ? "Cash In"
+            : category,
+
+        item:item,
+
+        description:finalDescription
+
+    };
+
+
+    transactions.push(transaction);
+
+
+    saveData();
+
+
+    resetForm();
+
+    closeModal();
+
+    render();
+
+}
+
+
+/* =========================================================
+   RESET FORM
+   ========================================================= */
+
+function resetForm() {
+
+    document.getElementById("amount").value = "";
+
+    document.getElementById("item").value = "";
+
+    document.getElementById("person").value = "";
+
+    document.getElementById("description").value = "";
+
+    document.getElementById("category").value = "Needs";
+
+    document.getElementById("personGroup")
+        .style.display = "none";
+
+    setTransactionType("income");
+
+}
+
+
+/* =========================================================
+   FILTERS
+   ========================================================= */
+
+function updateFilterOptions() {
+
+    const month =
+        document.getElementById("filterMonth");
+
+    const year =
+        document.getElementById("filterYear");
+
+
+    const oldMonth = month.value;
+    const oldYear = year.value;
+
+
+    month.innerHTML =
+        `<option value="all">
+            All Months
+        </option>`;
+
+
+    const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+    ];
+
+
+    months.forEach(
+        (name,index) => {
+
+            month.innerHTML +=
+                `<option value="${index}">
+                    ${name}
+                </option>`;
+
+        }
+    );
+
+
+    year.innerHTML =
+        `<option value="all">
+            All Years
+        </option>`;
+
+
+    const years =
+        [
+            ...new Set(
+                transactions.map(
+                    t =>
+                    new Date(
+                        t.date +
+                        "T00:00:00"
+                    ).getFullYear()
+                )
+            )
+        ]
+        .sort((a,b) => b-a);
+
+
+    years.forEach(y => {
+
+        year.innerHTML +=
+            `<option value="${y}">
+                ${y}
+            </option>`;
+
+    });
+
+
+    month.value = oldMonth;
+    year.value = oldYear;
+
+}
+
+
+function getFiltered() {
+
+    const date =
+        document.getElementById("filterDate")
+        .value;
+
+    const month =
+        document.getElementById("filterMonth")
+        .value;
+
+    const year =
+        document.getElementById("filterYear")
+        .value;
+
+    const type =
+        document.getElementById("filterType")
+        .value;
+
+    const search =
+        document.getElementById("search")
+        .value
+        .toLowerCase();
+
+
+    return transactions.filter(t => {
+
+        const d =
+            new Date(
+                t.date +
+                "T00:00:00"
+            );
+
+
+        const dateOK =
+            !date ||
+            t.date === date;
+
+
+        const monthOK =
+            month === "all" ||
+            d.getMonth() ==
+            Number(month);
+
+
+        const yearOK =
+            year === "all" ||
+            d.getFullYear() ==
+            Number(year);
+
+
+        const typeOK =
+            type === "all" ||
+            t.type === type;
+
+
+        const searchOK =
+            !search ||
+            (
+                t.item +
+                " " +
+                t.category +
+                " " +
+                t.description
+            )
+            .toLowerCase()
+            .includes(search);
+
+
+        return (
+            dateOK &&
+            monthOK &&
+            yearOK &&
+            typeOK &&
+            searchOK
+        );
+
+    });
+
+}
+
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+
+function render() {
+
+    updateFilterOptions();
+
+
+    let totalIn = 0;
+    let totalOut = 0;
+
+
+    transactions.forEach(t => {
+
+        if (t.type === "income") {
+
+            totalIn += Number(t.amount);
+
+        } else {
+
+            totalOut += Number(t.amount);
+
+        }
+
+    });
+
+
+    const balance =
+        totalIn - totalOut;
+
+
+    document.getElementById("totalIn")
+        .textContent =
+        money(totalIn);
+
+    document.getElementById("totalOut")
+        .textContent =
+        money(totalOut);
+
+    document.getElementById("balance")
+        .textContent =
+        money(balance);
+
+
+    const a =
+        allocation(totalIn);
+
+
+    document.getElementById(
+        "needsAllocation"
+    ).textContent =
+        money(a.needs);
+
+
+    document.getElementById(
+        "wantsAllocation"
+    ).textContent =
+        money(a.wants);
+
+
+    document.getElementById(
+        "savingsAllocation"
+    ).textContent =
+        money(a.savings);
+
+
+    document.getElementById(
+        "tithesAllocation"
+    ).textContent =
+        money(a.tithes);
+
+
+    document.getElementById(
+        "totalSavings"
+    ).textContent =
+        money(a.savings);
+
+
+    const filtered =
+        getFiltered();
+
+
+    renderTransactions(filtered);
+
+    renderBreakdown(filtered);
+
+    renderMonthly();
+
+    renderYearly();
+
+    drawChart(filtered);
+
+}
+
+
+/* =========================================================
+   RUNNING BALANCES
+   ========================================================= */
+
+function getBalances() {
+
+    let running = 0;
+
+    const balances = {};
+
+
+    const sorted =
+        [...transactions].sort(
+            (a,b) => {
+
+                const dateCompare =
+                    new Date(a.date) -
+                    new Date(b.date);
+
+                if (dateCompare !== 0) {
+                    return dateCompare;
+                }
+
+                return String(a.id)
+                    .localeCompare(
+                        String(b.id)
+                    );
+
+            }
+        );
+
+
+    sorted.forEach(t => {
+
+        if (t.type === "income") {
+
+            running += Number(t.amount);
+
+        } else {
+
+            running -= Number(t.amount);
+
+        }
+
+
+        balances[t.id] = running;
+
+    });
+
+
+    return balances;
+
+}
+
+
+/* =========================================================
+   TRANSACTION TABLE
+   ========================================================= */
+
+function renderTransactions(list) {
+
+    const table =
+        document.getElementById(
+            "transactionTable"
+        );
+
+
+    document.getElementById(
+        "transactionCount"
+    ).textContent =
+        list.length +
+        (
+            list.length === 1
+            ? " transaction"
+            : " transactions"
+        );
+
+
+    if (!list.length) {
+
+        table.innerHTML =
+            `<tr>
+                <td colspan="7"
+                    class="empty">
+                    No transactions found.
+                </td>
+            </tr>`;
+
+        return;
+
+    }
+
+
+    const balances =
+        getBalances();
+
+
+    const sorted =
+        [...list].sort(
+            (a,b) =>
+                new Date(b.date) -
+                new Date(a.date)
+        );
+
+
+    table.innerHTML =
+        sorted.map(t => {
+
+            const sign =
+                t.type === "income"
+                ? "+"
+                : "-";
+
+
+            const cls =
+                t.type === "income"
+                ? "green-text"
+                : "red-text";
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${formatDate(t.date)}
+                </td>
+
+                <td>
+                    <strong>
+                        ${escapeHTML(t.description)}
+                    </strong>
+                </td>
+
+                <td>
+                    ${escapeHTML(t.item)}
+                </td>
+
+                <td>
+                    ${escapeHTML(t.category)}
+                </td>
+
+                <td class="${cls}">
+                    ${sign}${money(t.amount)}
+                </td>
+
+                <td class="brown-text">
+                    ${money(balances[t.id])}
+                </td>
+
+                <td>
+
+                    <button
+                        class="delete"
+                        onclick="deleteTransaction('${escapeJS(t.id)}')">
+                        ✕
+                    </button>
+
+                </td>
+
+            </tr>
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   BREAKDOWN
+   ========================================================= */
+
+function renderBreakdown(list) {
+
+    const box =
+        document.getElementById(
+            "expenseBreakdown"
+        );
+
+
+    const totals = {};
+
+
+    expenseItems.forEach(item => {
+
+        totals[item] = 0;
+
+    });
+
+
+    /*
+       We also support custom imported items.
+    */
+
+    list.forEach(t => {
+
+        if (t.type !== "expense") {
+            return;
+        }
+
+
+        if (
+            !Object.prototype.hasOwnProperty
+            .call(totals,t.item)
+        ) {
+
+            totals[t.item] = 0;
+
+        }
+
+
+        totals[t.item] +=
+            Number(t.amount);
+
+    });
+
+
+    const entries =
+        Object.entries(totals)
+        .sort(
+            (a,b) => b[1] - a[1]
+        );
+
+
+    box.innerHTML =
+        entries.map(
+            ([item,total]) => `
+
+            <div class="item-card">
+
+                <strong>
+                    ${escapeHTML(item)}
+                </strong>
+
+                <span>
+                    ${money(total)}
+                </span>
+
+            </div>
+
+            `
+        )
+        .join("");
+
+}
+
+
+/* =========================================================
+   MONTHLY
+   ========================================================= */
+
+function renderMonthly() {
+
+    const table =
+        document.getElementById(
+            "monthlyTable"
+        );
+
+
+    const groups = {};
+
+
+    transactions.forEach(t => {
+
+        const d =
+            new Date(
+                t.date +
+                "T00:00:00"
+            );
+
+
+        const key =
+            d.getFullYear() +
+            "-" +
+            String(
+                d.getMonth()+1
+            ).padStart(2,"0");
+
+
+        if (!groups[key]) {
+
+            groups[key] = {
+                income:0,
+                expense:0
+            };
+
+        }
+
+
+        if (t.type === "income") {
+
+            groups[key].income +=
+                Number(t.amount);
+
+        } else {
+
+            groups[key].expense +=
+                Number(t.amount);
+
+        }
+
+    });
+
+
+    const keys =
+        Object.keys(groups)
+        .sort()
+        .reverse();
+
+
+    if (!keys.length) {
+
+        table.innerHTML =
+            `<tr>
+                <td colspan="4"
+                    class="empty">
+                    No monthly data.
+                </td>
+            </tr>`;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+        keys.map(key => {
+
+            const [y,m] =
+                key.split("-");
+
+            const label =
+                new Date(
+                    Number(y),
+                    Number(m)-1,
+                    1
+                )
+                .toLocaleDateString(
+                    "en-US",
+                    {
+                        month:"long",
+                        year:"numeric"
+                    }
+                );
+
+
+            const d =
+                groups[key];
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${label}
+                </td>
+
+                <td class="green-text">
+                    ${money(d.income)}
+                </td>
+
+                <td class="red-text">
+                    ${money(d.expense)}
+                </td>
+
+                <td class="brown-text">
+                    ${money(
+                        d.income -
+                        d.expense
+                    )}
+                </td>
+
+            </tr>
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   YEARLY
+   ========================================================= */
+
+function renderYearly() {
+
+    const table =
+        document.getElementById(
+            "yearlyTable"
+        );
+
+
+    const groups = {};
+
+
+    transactions.forEach(t => {
+
+        const year =
+            new Date(
+                t.date +
+                "T00:00:00"
+            ).getFullYear();
+
+
+        if (!groups[year]) {
+
+            groups[year] = {
+                income:0,
+                expense:0
+            };
+
+        }
+
+
+        if (t.type === "income") {
+
+            groups[year].income +=
+                Number(t.amount);
+
+        } else {
+
+            groups[year].expense +=
+                Number(t.amount);
+
+        }
+
+    });
+
+
+    const years =
+        Object.keys(groups)
+        .sort((a,b) => b-a);
+
+
+    if (!years.length) {
+
+        table.innerHTML =
+            `<tr>
+                <td colspan="4"
+                    class="empty">
+                    No yearly data.
+                </td>
+            </tr>`;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+        years.map(year => {
+
+            const d =
+                groups[year];
+
+
+            return `
+            <tr>
+
+                <td>
+                    ${year}
+                </td>
+
+                <td class="green-text">
+                    ${money(d.income)}
+                </td>
+
+                <td class="red-text">
+                    ${money(d.expense)}
+                </td>
+
+                <td class="brown-text">
+                    ${money(
+                        d.income -
+                        d.expense
+                    )}
+                </td>
+
+            </tr>
+            `;
+
+        })
+        .join("");
+
+}
+
+
+/* =========================================================
+   CHART
+   ========================================================= */
+
+function drawChart(list) {
+
+    const canvas =
+        document.getElementById(
+            "cashFlowChart"
+        );
+
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const ratio =
+        window.devicePixelRatio || 1;
+
+
+    canvas.width =
+        rect.width * ratio;
+
+    canvas.height =
+        rect.height * ratio;
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    ctx.scale(ratio,ratio);
+
+
+    const width =
+        rect.width;
+
+    const height =
+        rect.height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    if (!list.length) {
+
+        ctx.fillStyle =
+            "#776b63";
+
+        ctx.font =
+            "15px Arial";
+
+        ctx.textAlign =
+            "center";
+
+        ctx.fillText(
+            "Add transactions to see your cash flow.",
+            width/2,
+            height/2
+        );
+
+        return;
+
+    }
+
+
+    const groups = {};
+
+
+    list.forEach(t => {
+
+        if (!groups[t.date]) {
+
+            groups[t.date] = {
+                income:0,
+                expense:0
+            };
+
+        }
+
+
+        if (t.type === "income") {
+
+            groups[t.date].income +=
+                Number(t.amount);
+
+        } else {
+
+            groups[t.date].expense +=
+                Number(t.amount);
+
+        }
+
+    });
+
+
+    const dates =
+        Object.keys(groups)
+        .sort();
+
+
+    const incomes =
+        dates.map(
+            d => groups[d].income
+        );
+
+
+    const expenses =
+        dates.map(
+            d => groups[d].expense
+        );
+
+
+    const max =
+        Math.max(
+            ...incomes,
+            ...expenses,
+            1
+        );
+
+
+    const left = 45;
+    const right = 20;
+    const top = 35;
+    const bottom = 35;
+
+
+    const chartWidth =
+        width -
+        left -
+        right;
+
+
+    const chartHeight =
+        height -
+        top -
+        bottom;
+
+
+    /* GRID */
+
+    ctx.strokeStyle =
+        "#dfd0c5";
+
+    ctx.lineWidth = 1;
+
+
+    for(let i=0;i<=4;i++) {
+
+        const y =
+            top +
+            chartHeight *
+            i/4;
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            left,
+            y
+        );
+
+        ctx.lineTo(
+            width-right,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    function drawLine(values,color) {
+
+        ctx.beginPath();
+
+
+        values.forEach(
+            (value,index) => {
+
+                const x =
+                    left +
+                    (
+                        index /
+                        Math.max(
+                            values.length-1,
+                            1
+                        )
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    height -
+                    bottom -
+                    (
+                        value/max
+                    ) *
+                    chartHeight;
+
+
+                if(index === 0) {
+
+                    ctx.moveTo(x,y);
+
+                } else {
+
+                    ctx.lineTo(x,y);
+
+                }
+
+            }
+        );
+
+
+        ctx.strokeStyle =
+            color;
+
+        ctx.lineWidth = 3;
+
+        ctx.stroke();
+
+
+        values.forEach(
+            (value,index) => {
+
+                const x =
+                    left +
+                    (
+                        index /
+                        Math.max(
+                            values.length-1,
+                            1
+                        )
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    height -
+                    bottom -
+                    (
+                        value/max
+                    ) *
+                    chartHeight;
+
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    x,
+                    y,
+                    4,
+                    0,
+                    Math.PI*2
+                );
+
+                ctx.fillStyle =
+                    color;
+
+                ctx.fill();
+
+            }
+        );
+
+    }
+
+
+    drawLine(
+        incomes,
+        "#4f7659"
+    );
+
+
+    drawLine(
+        expenses,
+        "#b85f3d"
+    );
+
+
+    /* LABELS */
+
+    ctx.font =
+        "11px Arial";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.fillStyle =
+        "#776b63";
+
+
+    const count =
+        Math.min(
+            dates.length,
+            6
+        );
+
+
+    for(let i=0;i<count;i++) {
+
+        const index =
+            Math.floor(
+                i *
+                (dates.length-1) /
+                Math.max(
+                    count-1,
+                    1
+                )
+            );
+
+
+        const x =
+            left +
+            (
+                index /
+                Math.max(
+                    dates.length-1,
+                    1
+                )
+            ) *
+            chartWidth;
+
+
+        ctx.fillText(
+            shortDate(dates[index]),
+            x,
+            height-10
+        );
+
+    }
+
+
+    /* LEGEND */
+
+    ctx.textAlign="left";
+
+    ctx.fillStyle="#4f7659";
+
+    ctx.fillText(
+        "● Cash In",
+        left,
+        18
+    );
+
+
+    ctx.fillStyle="#b85f3d";
+
+    ctx.fillText(
+        "● Cash Out",
+        left+85,
+        18
+    );
+
+}
+
+
+/* =========================================================
+   DELETE
+   ========================================================= */
+
+function deleteTransaction(id) {
+
+    if(
+        !confirm(
+            "Delete this transaction?"
+        )
+    ) {
+        return;
+    }
+
+
+    transactions =
+        transactions.filter(
+            t =>
+            String(t.id) !==
+            String(id)
+        );
+
+
+    saveData();
+
+    render();
+
+}
+
+
+/* =========================================================
+   CSV EXPORT
+   ========================================================= */
+
+function exportCSV() {
+
+    if(!transactions.length) {
+
+        alert(
+            "There is no data to export."
+        );
+
+        return;
+
+    }
+
+
+    const rows = [
+        [
+            "ID",
+            "Date",
+            "Type",
+            "Category",
+            "Item",
+            "Description",
+            "Amount"
+        ]
+    ];
+
+
+    transactions.forEach(t => {
+
+        rows.push([
+            t.id,
+            t.date,
+            t.type,
+            t.category,
+            t.item,
+            t.description,
+            Number(t.amount)
+        ]);
+
+    });
+
+
+    const csv =
+        rows
+        .map(row =>
+            row.map(value =>
+                `"${String(value)
+                    .replace(/"/g,'""')}"`
+            )
+            .join(",")
+        )
+        .join("\n");
+
+
+    downloadFile(
+        csv,
+        "my-money-backup.csv",
+        "text/csv;charset=utf-8;"
+    );
+
+}
+
+
+/* =========================================================
+   EXCEL EXPORT
+   ========================================================= */
+
+function exportXLSX() {
+
+    if(!transactions.length) {
+
+        alert(
+            "There is no data to export."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        typeof XLSX === "undefined"
+    ) {
+
+        alert(
+            "The Excel library could not be loaded. Check your internet connection and try again."
+        );
+
+        return;
+
+    }
+
+
+    const rows =
+        transactions.map(t => ({
+
+            ID:t.id,
+
+            Date:t.date,
+
+            Type:t.type,
+
+            Category:t.category,
+
+            Item:t.item,
+
+            Description:t.description,
+
+            Amount:Number(t.amount)
+
+        }));
+
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(rows);
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Transactions"
+    );
+
+
+    XLSX.writeFile(
+        workbook,
+        "my-money-backup.xlsx"
+    );
+
+}
+
+
+/* =========================================================
+   GENERIC DOWNLOAD
+   ========================================================= */
+
+function downloadFile(
+    content,
+    filename,
+    type
+) {
+
+    const blob =
+        new Blob(
+            [content],
+            {type:type}
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   RESTORE BACKUP
+   ========================================================= */
+
+async function handleBackupFile(event) {
+
+    const file =
+        event.target.files[0];
+
+
+    if(!file) {
+        return;
+    }
+
+
+    const status =
+        document.getElementById(
+            "restoreStatus"
+        );
+
+
+    status.textContent =
+        "Reading " +
+        file.name +
+        "...";
+
+
+    try {
+
+        const extension =
+            file.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+        let imported = [];
+
+
+        /* CSV */
+
+        if(extension === "csv") {
+
+            imported =
+                await readCSV(file);
+
+        }
+
+
+        /* XLSX / XLS */
+
+        else if(
+            extension === "xlsx" ||
+            extension === "xls"
+        ) {
+
+            imported =
+                await readExcel(file);
+
+        }
+
+
+        else {
+
+            throw new Error(
+                "Unsupported file type."
+            );
+
+        }
+
+
+        if(!imported.length) {
+
+            throw new Error(
+                "No recognizable transactions were found in this file."
+            );
+
+        }
+
+
+        showRestoreChoice(
+            imported,
+            file.name
+        );
+
+
+    } catch(error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Import failed: " +
+            error.message;
+
+        alert(
+            "The backup could not be imported.\n\n" +
+            error.message
+        );
+
+    }
+
+
+    /*
+       Allows the same file to be selected again.
+    */
+
+    event.target.value = "";
+
+}
+
+
+/* =========================================================
+   READ CSV
+   ========================================================= */
+
+function readCSV(file) {
+
+    return new Promise(
+        (resolve,reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(event) {
+
+                    try {
+
+                        const text =
+                            event.target.result;
+
+
+                        /*
+                           Use SheetJS to parse CSV.
+                           This handles quoted commas,
+                           headers and spreadsheet-style data.
+                        */
+
+                        const workbook =
+                            XLSX.read(
+                                text,
+                                {
+                                    type:"string",
+                                    cellDates:true
+                                }
+                            );
+
+
+                        const firstSheet =
+                            workbook
+                            .Sheets[
+                                workbook
+                                .SheetNames[0]
+                            ];
+
+
+                        const rows =
+                            XLSX.utils.sheet_to_json(
+                                firstSheet,
+                                {
+                                    defval:""
+                                }
+                            );
+
+
+                        resolve(
+                            normalizeImportedRows(
+                                rows
+                            )
+                        );
+
+                    } catch(error) {
+
+                        reject(error);
+
+                    }
+
+                };
+
+
+            reader.onerror =
+                () =>
+                reject(
+                    new Error(
+                        "Could not read CSV file."
+                    )
+                );
+
+
+            reader.readAsText(file);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   READ EXCEL
+   ========================================================= */
+
+function readExcel(file) {
+
+    return new Promise(
+        (resolve,reject) => {
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function(event) {
+
+                    try {
+
+                        const data =
+                            new Uint8Array(
+                                event.target.result
+                            );
+
+
+                        const workbook =
+                            XLSX.read(
+                                data,
+                                {
+                                    type:"array",
+                                    cellDates:true
+                                }
+                            );
+
+
+                        /*
+                           First worksheet.
+                           This supports normal Excel
+                           spreadsheets and Google Sheets
+                           files downloaded as XLSX.
+                        */
+
+                        const sheet =
+                            workbook
+                            .Sheets[
+                                workbook
+                                .SheetNames[0]
+                            ];
+
+
+                        const rows =
+                            XLSX.utils.sheet_to_json(
+                                sheet,
+                                {
+                                    defval:""
+                                }
+                            );
+
+
+                        resolve(
+                            normalizeImportedRows(
+                                rows
+                            )
+                        );
+
+                    } catch(error) {
+
+                        reject(error);
+
+                    }
+
+                };
+
+
+            reader.onerror =
+                () =>
+                reject(
+                    new Error(
+                        "Could not read Excel file."
+                    )
+                );
+
+
+            reader.readAsArrayBuffer(file);
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   NORMALIZE IMPORTED DATA
+   =========================================================
+
+   Accepts common column names such as:
+
+   Date
+   date
+   DATE
+
+   Amount
+   amount
+
+   Type
+   Transaction Type
+
+   Category
+   Item
+   Description
+
+   This makes it easier to restore files exported
+   from this system or manually prepared spreadsheets.
+   ========================================================= */
+
+function normalizeImportedRows(rows) {
+
+    const result = [];
+
+
+    rows.forEach((row,index) => {
+
+        const normalized = {};
+
+
+        Object.keys(row).forEach(key => {
+
+            const clean =
+                String(key)
+                .trim()
+                .toLowerCase()
+                .replace(/[\s_-]+/g,"");
+
+
+            normalized[clean] =
+                row[key];
+
+        });
+
+
+        const dateValue =
+            normalized.date ||
+            normalized.transactiondate ||
+            normalized.datetime;
+
+
+        const amountValue =
+            normalized.amount ||
+            normalized.total ||
+            normalized.value;
+
+
+        const typeValue =
+            normalized.type ||
+            normalized.transactiontype ||
+            normalized.cashflow;
+
+
+        const categoryValue =
+            normalized.category ||
+            normalized.designation;
+
+
+        const itemValue =
+            normalized.item ||
+            normalized.expense ||
+            normalized.expenseitem ||
+            normalized.name;
+
+
+        const descriptionValue =
+            normalized.description ||
+            normalized.note ||
+            normalized.notes ||
+            "";
+
+
+        if(
+            !dateValue ||
+            amountValue === undefined ||
+            amountValue === ""
+        ) {
+
+            return;
+
+        }
+
+
+        const amount =
+            parseAmount(amountValue);
+
+
+        if(
+            !amount ||
+            amount <= 0
+        ) {
+
+            return;
+
+        }
+
+
+        const type =
+            normalizeType(
+                typeValue,
+                categoryValue,
+                descriptionValue
+            );
+
+
+        const category =
+            normalizeCategory(
+                categoryValue,
+                type
+            );
+
+
+        const item =
+            String(
+                itemValue ||
+                category ||
+                "Imported"
+            )
+            .trim();
+
+
+        const description =
+            String(
+                descriptionValue ||
+                item
+            )
+            .trim();
+
+
+        const date =
+            normalizeDate(
+                dateValue
+            );
+
+
+        if(!date) {
+
+            return;
+
+        }
+
+
+        result.push({
+
+            id:
+                String(
+                    normalized.id ||
+                    "IMPORT-" +
+                    Date.now() +
+                    "-" +
+                    index +
+                    "-" +
+                    Math.random()
+                    .toString(36)
+                    .substring(2,6)
+                ),
+
+            date:date,
+
+            amount:amount,
+
+            type:type,
+
+            category:
+                type === "income"
+                ? "Cash In"
+                : category,
+
+            item:item,
+
+            description:description
+
+        });
+
+    });
+
+
+    return result;
+
+}
+
+
+/* =========================================================
+   AMOUNT PARSER
+   ========================================================= */
+
+function parseAmount(value) {
+
+    if(
+        typeof value ===
+        "number"
+    ) {
+
+        return value;
+
+    }
+
+
+    let text =
+        String(value)
+        .trim();
+
+
+    /*
+       Handles:
+
+       ₱1,500
+       PHP 1,500
+       1,500
+       1500
+       ₱ 1,500.50
+    */
+
+    text =
+        text
+        .replace(/₱/g,"")
+        .replace(/PHP/gi,"")
+        .replace(/,/g,"")
+        .trim();
+
+
+    const number =
+        Number(text);
+
+
+    return Number.isFinite(number)
+        ? number
+        : 0;
+
+}
+
+
+/* =========================================================
+   DATE PARSER
+   ========================================================= */
+
+function normalizeDate(value) {
+
+    if(
+        value instanceof Date &&
+        !isNaN(value)
+    ) {
+
+        return value
+            .toISOString()
+            .split("T")[0];
+
+    }
+
+
+    if(
+        typeof value === "number"
+    ) {
+
+        /*
+           Excel serial date.
+        */
+
+        const date =
+            new Date(
+                Math.round(
+                    (
+                        value -
+                        25569
+                    ) *
+                    86400 *
+                    1000
+                )
+            );
+
+
+        if(!isNaN(date)) {
+
+            return date
+                .toISOString()
+                .split("T")[0];
+
+        }
+
+    }
+
+
+    const text =
+        String(value)
+        .trim();
+
+
+    /*
+       YYYY-MM-DD
+    */
+
+    if(
+        /^\d{4}-\d{2}-\d{2}$/
+        .test(text)
+    ) {
+
+        return text;
+
+    }
+
+
+    /*
+       MM/DD/YYYY
+       MM-DD-YYYY
+    */
+
+    let match =
+        text.match(
+            /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/
+        );
+
+
+    if(match) {
+
+        return (
+            match[3] +
+            "-" +
+            String(match[1]).padStart(2,"0") +
+            "-" +
+            String(match[2]).padStart(2,"0")
+        );
+
+    }
+
+
+    const parsed =
+        new Date(text);
+
+
+    if(!isNaN(parsed)) {
+
+        return parsed
+            .toISOString()
+            .split("T")[0];
+
+    }
+
+
+    return "";
+
+}
+
+
+/* =========================================================
+   TYPE NORMALIZER
+   ========================================================= */
+
+function normalizeType(
+    value,
+    category,
+    description
+) {
+
+    const text =
+        String(
+            value ||
+            ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if(
+        text.includes("in") ||
+        text.includes("income") ||
+        text.includes("cashin") ||
+        text.includes("credit") ||
+        text.includes("deposit")
+    ) {
+
+        return "income";
+
+    }
+
+
+    if(
+        text.includes("out") ||
+        text.includes("expense") ||
+        text.includes("cashout") ||
+        text.includes("debit") ||
+        text.includes("spend")
+    ) {
+
+        return "expense";
+
+    }
+
+
+    /*
+       If Type wasn't supplied, infer from category.
+    */
+
+    const cat =
+        String(
+            category ||
+            ""
+        )
+        .toLowerCase();
+
+
+    if(
+        cat.includes("income") ||
+        cat.includes("cash in")
+    ) {
+
+        return "income";
+
+    }
+
+
+    /*
+       Otherwise imported financial rows
+       are treated as Cash Out.
+    */
+
+    return "expense";
+
+}
+
+
+/* =========================================================
+   CATEGORY NORMALIZER
+   ========================================================= */
+
+function normalizeCategory(
+    value,
+    type
+) {
+
+    if(type === "income") {
+
+        return "Cash In";
+
+    }
+
+
+    const text =
+        String(
+            value ||
+            ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if(text === "need" ||
+       text === "needs") {
+
+        return "Needs";
+
+    }
+
+
+    if(text === "want" ||
+       text === "wants") {
+
+        return "Wants";
+
+    }
+
+
+    if(
+        text === "saving" ||
+        text === "savings"
+    ) {
+
+        return "Savings";
+
+    }
+
+
+    if(text === "tithe" ||
+       text === "tithes") {
+
+        return "Tithes";
+
+    }
+
+
+    /*
+       If an imported Cash Out has no
+       recognizable category, default to Needs.
+    */
+
+    return "Needs";
+
+}
+
+
+/* =========================================================
+   RESTORE CHOICE
+   ========================================================= */
+
+function showRestoreChoice(
+    imported,
+    filename
+) {
+
+    const status =
+        document.getElementById(
+            "restoreStatus"
+        );
+
+
+    const choice =
+        prompt(
+            "Backup loaded successfully: " +
+            filename +
+            "\n\n" +
+            imported.length +
+            " transactions found.\n\n" +
+            "Type ADD to add them to your existing data.\n" +
+            "Type REPLACE to delete current data and restore this backup.\n" +
+            "Press Cancel to do nothing."
+        );
+
+
+    if(choice === null) {
+
+        status.textContent =
+            "Restore cancelled.";
+
+        return;
+
+    }
+
+
+    const action =
+        choice
+        .trim()
+        .toLowerCase();
+
+
+    if(
+        action !== "add" &&
+        action !== "replace"
+    ) {
+
+        status.textContent =
+            "Restore cancelled. Type ADD or REPLACE.";
+
+        alert(
+            "Please type ADD or REPLACE."
+        );
+
+        return;
+
+    }
+
+
+    if(action === "replace") {
+
+        const confirmed =
+            confirm(
+                "REPLACE will delete your current dashboard data and restore the selected backup.\n\nContinue?"
+            );
+
+
+        if(!confirmed) {
+
+            status.textContent =
+                "Restore cancelled.";
+
+            return;
+
+        }
+
+
+        transactions = imported;
+
+    } else {
+
+        /*
+           ADD mode.
+
+           Existing IDs are checked so importing
+           the same backup twice does not create
+           duplicate transactions.
+        */
+
+        const existingIds =
+            new Set(
+                transactions.map(
+                    t => String(t.id)
+                )
+            );
+
+
+        let added = 0;
+
+
+        imported.forEach(t => {
+
+            if(
+                !existingIds.has(
+                    String(t.id)
+                )
+            ) {
+
+                transactions.push(t);
+
+                existingIds.add(
+                    String(t.id)
+                );
+
+                added++;
+
+            }
+
+        });
+
+
+        status.textContent =
+            "Added " +
+            added +
+            " new transactions.";
+
+    }
+
+
+    saveData();
+
+    render();
+
+
+    if(action === "replace") {
+
+        status.textContent =
+            "Successfully restored " +
+            imported.length +
+            " transactions.";
+
+    }
+
+
+    alert(
+        action === "replace"
+        ? "Backup restored successfully!"
+        : "Backup imported successfully!"
+    );
+
+}
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function formatDate(date) {
+
+    return new Date(
+        date +
+        "T00:00:00"
+    )
+    .toLocaleDateString(
+        "en-PH",
+        {
+            month:"short",
+            day:"numeric",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+function shortDate(date) {
+
+    return new Date(
+        date +
+        "T00:00:00"
+    )
+    .toLocaleDateString(
+        "en-PH",
+        {
+            month:"short",
+            day:"numeric"
+        }
+    );
+
+}
+
+
+function escapeHTML(text) {
+
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+function escapeJS(text) {
+
+    return String(text)
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'")
+        .replace(/"/g,'\\"');
+
+}
+
+
+/* =========================================================
+   OUTSIDE MODAL CLICK
+   ========================================================= */
+
+document
+    .getElementById("transactionModal")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            if(
+                event.target === this
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   RESIZE CHART
+   ========================================================= */
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        drawChart(
+            getFiltered()
+        );
+
+    }
+);
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+render();
+
+</script>
+
+</body>
+</html>}
+
+button,input,select {
+    font:inherit;
+}
+
+button {
+    cursor:pointer;
+}
+
+header {
+    background:var(--dark);
+    color:white;
+    padding:25px 20px;
+}
+
+.header-inner {
+    max-width:1400px;
+    margin:auto;
+}
+
+.logo {
+    font-size:29px;
+    font-weight:900;
+}
+
+.subtitle {
+    margin-top:6px;
+    color:#d8c8bd;
+}
+
+.container {
+    max-width:1400px;
+    margin:auto;
+    padding:22px;
+}
+
+/* TOP CARDS */
+
+.dashboard {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    margin-bottom:18px;
+}
+
+.card {
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 5px 18px rgba(50,30,20,.06);
+}
+
+.label {
+    color:var(--muted);
+    font-size:11px;
+    font-weight:bold;
+    letter-spacing:.5px;
+}
+
+.value {
+    font-size:27px;
+    font-weight:900;
+    margin-top:7px;
+}
+
+.balance {
+    color:var(--brown);
+}
+
+.income {
+    color:var(--green);
+}
+
+.expense {
+    color:var(--red);
+}
+
+.saving-color {
+    color:var(--green);
+}
+
+/* ALLOCATION */
+
+.section {
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.section-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.section-head h2 {
+    margin:0;
+    font-size:20px;
+}
+
+.muted {
+    color:var(--muted);
+    font-size:12px;
+}
+
+.allocation {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+}
+
+.alloc {
+    padding:18px;
+    background:#f5ece6;
+    border-radius:15px;
+}
+
+.alloc-top {
+    display:flex;
+    justify-content:space-between;
+    font-weight:bold;
+}
+
+.alloc-amount {
+    font-size:21px;
+    font-weight:900;
+    margin-top:8px;
+}
+
+.progress {
+    height:8px;
+    margin-top:12px;
+    border-radius:10px;
+    overflow:hidden;
+    background:#dfd3cc;
+}
+
+.progress div {
+    height:100%;
+}
+
+.needs-bar {
+    background:var(--brown);
+}
+
+.wants-bar {
+    background:var(--terracotta);
+}
+
+.savings-bar {
+    background:var(--green);
+}
+
+.tithes-bar {
+    background:var(--gold);
+}
+
+/* BUTTONS */
+
+.btn {
+    border:0;
+    padding:10px 14px;
+    border-radius:10px;
+    font-weight:bold;
+}
+
+.btn-primary {
+    background:var(--terracotta);
+    color:white;
+}
+
+.btn-dark {
+    background:var(--brown);
+    color:white;
+}
+
+.btn-green {
+    background:var(--green);
+    color:white;
+}
+
+.btn-red {
+    background:var(--red);
+    color:white;
+}
+
+.btn-blue {
+    background:var(--blue);
+    color:white;
+}
+
+.btn-light {
+    background:#eaded6;
+    color:var(--black);
+}
+
+/* FILTERS */
+
+.filters {
+    display:flex;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-bottom:20px;
+}
+
+input,
+select {
+    border:1px solid var(--line);
+    background:white;
+    border-radius:9px;
+    padding:10px 12px;
+    outline:none;
+}
+
+input:focus,
+select:focus {
+    border-color:var(--terracotta);
+}
+
+/* CHART */
+
+.chart {
+    width:100%;
+    height:340px;
+}
+
+canvas {
+    width:100%;
+    height:100%;
+}
+
+/* TWO COLUMNS */
+
+.two {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+/* BREAKDOWN */
+
+.item-grid {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.item-card {
+    background:#f3e8e1;
+    border-radius:12px;
+    padding:14px;
+}
+
+.item-card strong {
+    display:block;
+    margin-bottom:6px;
+}
+
+.item-card span {
+    color:var(--terracotta);
+    font-size:17px;
+    font-weight:900;
+}
+
+/* TABLE */
+
+.table-wrap {
+    width:100%;
+    overflow-x:auto;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,
+td {
+    padding:12px 8px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    white-space:nowrap;
+}
+
+th {
+    color:var(--muted);
+    font-size:10px;
+    text-transform:uppercase;
+}
+
+.green-text {
+    color:var(--green);
+    font-weight:bold;
+}
+
+.red-text {
+    color:var(--red);
+    font-weight:bold;
+}
+
+.brown-text {
+    color:var(--brown);
+    font-weight:bold;
+}
+
+.delete {
+    background:transparent;
+    color:var(--red);
+    border:0;
+    font-size:16px;
+}
+
+.empty {
+    text-align:center;
+    padding:30px;
+    color:var(--muted);
+}
+
+/* BACKUP */
+
+.backup-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.backup-box {
+    background:#f4e9e2;
+    border-radius:14px;
+    padding:17px;
+}
+
+.backup-box h3 {
+    margin-top:0;
+}
+
+.backup-box p {
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.5;
+}
+
+/* MODAL */
+
+.modal {
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:rgba(20,13,10,.72);
+    justify-content:center;
+    align-items:center;
+    padding:15px;
+}
+
+.modal.active {
+    display:flex;
+}
+
+.modal-box {
+    width:100%;
+    max-width:570px;
+    max-height:92vh;
+    overflow-y:auto;
+    background:var(--white);
+    border-radius:20px;
+    padding:25px;
+}
+
+.modal-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.modal-head h2 {
+    margin:0;
+}
+
+.close {
+    background:transparent;
+    border:0;
+    font-size:25px;
+}
+
+.form-group {
+    margin-bottom:15px;
+}
+
+.form-group label {
+    display:block;
+    margin-bottom:6px;
+    font-size:11px;
+    font-weight:bold;
+    color:var(--muted);
+}
+
+.form-group input,
+.form-group select {
+    width:100%;
+}
+
+.amount-input {
+    font-size:25px;
+    font-weight:bold;
+}
+
+.type-buttons {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.type-btn {
+    border:0;
+    padding:13px;
+    border-radius:10px;
+    background:#eaded5;
+    font-weight:bold;
+}
+
+.type-in-active {
+    background:var(--green);
+    color:white;
+}
+
+.type-out-active {
+    background:var(--terracotta);
+    color:white;
+}
+
+.disabled-category {
+    opacity:.45;
+    pointer-events:none;
+}
+
+.preview {
+    background:#f0e3db;
+    border-radius:13px;
+    padding:15px;
+    margin-bottom:15px;
+}
+
+.preview-title {
+    font-weight:bold;
+    margin-bottom:7px;
+}
+
+.preview-row {
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+}
+
+.warning {
+    background:#fff0e8;
+    border:1px solid #e2b5a1;
+    border-radius:10px;
+    padding:10px;
+    color:#7a3d2b;
+    font-size:12px;
+    margin-bottom:15px;
+}
+
+/* FILE INPUT */
+
+.file-input {
+    display:none;
+}
+
+.file-label {
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:10px;
+    background:var(--brown);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* FLOATING PLUS */
+
+.add {
+    position:fixed;
+    right:25px;
+    bottom:25px;
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    border:0;
+    background:var(--terracotta);
+    color:white;
+    font-size:34px;
+    box-shadow:0 8px 25px rgba(70,35,20,.35);
+    z-index:500;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:950px) {
+
+    .dashboard,
+    .allocation {
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .item-grid {
+        grid-template-columns:repeat(3,1fr);
+    }
+
+    .two {
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:600px) {
+
+    .container {
+        padding:12px;
+    }
+
+    .dashboard,
+    .allocation {
+        grid-template-columns:1fr 1fr;
+        gap:9px;
+    }
+
+    .card,
+    .alloc {
+        padding:14px;
+    }
+
+    .value {
+        font-size:20px;
+    }
+
+    .item-grid {
+        grid-template-columns:1fr 1fr;
+    }
+
+    .backup-grid {
+        grid-template-columns:1fr;
+    }
+
+    .section {
+        padding:15px;
+    }
+
+    .logo {
+        font-size:23px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="logo">MY MONEY</div>
+        <div class="subtitle">
+            Cash Flow • Needs • Wants • Savings • Tithes
+        </div>
+    </div>
+</header>
+
+
+<div class="container">
+
+    <!-- DASHBOARD -->
+
+    <div class="dashboard">
+
+        <div class="card">
+            <div class="label">REMAINING BALANCE</div>
+            <div class="value balance" id="balance">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">TOTAL CASH IN</div>
+            <div class="value income" id="totalIn">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">TOTAL CASH OUT</div>
+            <div class="value expense" id="totalOut">₱0.00</div>
+        </div>
+
+        <div class="card">
+            <div class="label">SAVINGS ALLOCATED</div>
+            <div class="value saving-color" id="totalSavings">₱0.00</div>
+        </div>
+
+    </div>
+
+
+    <!-- AUTOMATIC 50/30/10/10 -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Automatic Cash-In Allocation</h2>
+            <span class="muted">
+                Every Cash In is divided automatically
+            </span>
+        </div>
+
+        <div class="allocation">
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>NEEDS</span>
+                    <span>50%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="needsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="needs-bar"
+                         style="width:50%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>WANTS</span>
+                    <span>30%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="wantsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="wants-bar"
+                         style="width:30%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>SAVINGS</span>
+                    <span>10%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="savingsAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="savings-bar"
+                         style="width:10%">
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="alloc">
+                <div class="alloc-top">
+                    <span>TITHES</span>
+                    <span>10%</span>
+                </div>
+
+                <div class="alloc-amount"
+                     id="tithesAllocation">
+                    ₱0.00
+                </div>
+
+                <div class="progress">
+                    <div class="tithes-bar"
+                         style="width:10%">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- FILTERS -->
+
+    <div class="filters">
+
+        <input
+            type="date"
+            id="filterDate"
+            onchange="render()"
+        >
+
+        <select
+            id="filterMonth"
+            onchange="render()">
+            <option value="all">All Months</option>
+        </select>
+
+        <select
+            id="filterYear"
+            onchange="render()">
+            <option value="all">All Years</option>
+        </select>
+
+        <select
+            id="filterType"
+            onchange="render()">
+
+            <option value="all">
+                Cash In + Cash Out
+            </option>
+
+            <option value="income">
+                Cash In
+            </option>
+
+            <option value="expense">
+                Cash Out
+            </option>
+
+        </select>
+
+        <input
+            type="text"
+            id="search"
+            placeholder="Search..."
+            oninput="render()"
+        >
+
+    </div>
+
+
+    <!-- CASH FLOW -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Cash Flow</h2>
+
+            <span class="muted">
+                Green = Cash In • Terracotta = Cash Out
+            </span>
+        </div>
+
+        <div class="chart">
+            <canvas id="cashFlowChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- EXPENSE BREAKDOWN -->
+
+    <div class="section">
+
+        <div class="section-head">
+            <h2>Expense Breakdown</h2>
+
+            <span class="muted">
+                See exactly how much goes to every item
+            </span>
+        </div>
+
+        <div
+            class="item-grid"
+            id="expenseBreakdown">
+        </div>
+
+    </div>
+
+
+    <!-- MONTHLY / YEARLY -->
+
+    <div class="two">
+
+        <div class="section">
+
+            <div class="section-head">
+                <h2>Monthly Comparison</h2>
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Cash In</th>
+                            <th>Cash Out</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="monthlyTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <div class="section-head">
+                <h2>Yearly Comparison</h2>
+            </div>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Cash In</th>
+                            <th>Cash Out</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="yearlyTable">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BACKUP / RESTORE -->
+
+    <div class="section">
+
+        <div class="section-head">
+
+            <h2>Backup & Restore</h2>
+
+            <span class="muted">
+                Keep a copy of your financial data
+            </span>
+
+        </div>
+
+
+        <div class="backup-grid">
+
+            <div class="backup-box">
+
+                <h3>Export Backup</h3>
+
+                <p>
+                    Download your transactions as CSV or
+                    Excel spreadsheet. Keep the downloaded
+                    file somewhere safe so you can restore
+                    your data later.
+                </p>
+
+                <button
+                    class="btn btn-dark"
+                    onclick="exportCSV()">
+                    Download CSV
+                </button>
+
+                <button
+                    class="btn btn-green"
+                    onclick="exportXLSX()">
+                    Download Excel
+                </button>
+
+            </div>
+
+
+            <div class="backup-box">
+
+                <h3>Restore Backup</h3>
+
+                <p>
+                    Select a CSV, Excel XLSX/XLS file, or a
+                    spreadsheet exported from Google Sheets.
+                    The system will actually read the file
+                    and import the transactions into this
+                    dashboard.
+                </p>
+
+                <label
+                    for="backupFile"
+                    class="file-label">
+                    Restore Backup
+                </label>
+
+                <input
+                    class="file-input"
+                    type="file"
+                    id="backupFile"
+                    accept=".csv,.xlsx,.xls"
+                    onchange="handleBackupFile(event)"
+                >
+
+                <div
+                    id="restoreStatus"
+                    class="muted"
+                    style="margin-top:10px;">
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TRANSACTIONS -->
+
+    <div class="section">
+
+        <div class="section-head">
+
+            <h2>Transactions</h2>
+
+            <span
+                class="muted"
+                id="transactionCount">
+                0 transactions
+            </span>
+
+        </div>
+
+
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Item</th>
+                        <th>Category</th>
+                        <th>Cash Flow</th>
+                        <th>Remaining Balance</th>
+                        <th></th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="transactionTable">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PLUS -->
+
+<button
+    class="add"
+    onclick="openModal()">
+    +
+</button>
+
+
+<!-- ADD TRANSACTION MODAL -->
+
+<div
+    class="modal"
+    id="transactionModal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <h2>Add Transaction</h2>
+
+            <button
+                class="close"
+                onclick="closeModal()">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- DATE -->
+
+        <div class="form-group">
+
+            <label>DATE</label>
+
+            <input
+                type="date"
+                id="date"
+            >
+
+        </div>
+
+
+        <!-- AMOUNT -->
+
+        <div class="form-group">
+
+            <label>AMOUNT</label>
+
+            <input
+                type="number"
+                id="amount"
+                class="amount-input"
+                min="0"
+                step="0.01"
+                placeholder="₱0.00"
+                oninput="updatePreview()"
+            >
+
+        </div>
+
+
+        <!-- CASH IN / OUT -->
+
+        <div class="form-group">
+
+            <label>TRANSACTION TYPE</label>
+
+            <div class="type-buttons">
+
+                <button
+                    id="cashInBtn"
+                    class="type-btn type-in-active"
+                    onclick="setTransactionType('income')">
+                    + CASH IN
+                </button>
+
+                <button
+                    id="cashOutBtn"
+                    class="type-btn"
+                    onclick="setTransactionType('expense')">
+                    − CASH OUT
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- CATEGORY -->
+
+        <div class="form-group">
+
+            <label>
+                CATEGORY
+            </label>
+
+            <select
+                id="category"
+                onchange="updatePreview()">
+
+                <option value="Needs">
+                    Needs
+                </option>
+
+                <option value="Wants">
+                    Wants
+                </option>
+
+                <option value="Savings">
+                    Savings
+                </option>
+
+                <option value="Tithes">
+                    Tithes
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- ITEM -->
+
+        <div class="form-group">
+
+            <label>
+                ITEM / EXPENSE
+            </label>
+
+            <input
+                list="expenseItems"
+                id="item"
+                placeholder="Type or select..."
+                oninput="checkTreatingOthers()"
+            >
+
  
