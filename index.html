@@ -6,17 +6,9 @@
 <title>My Money Dashboard</title>
 
 <!-- SheetJS: Enables real Excel XLSX/XLS import and export -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js">
 
-    function openTransactionModal() {
-    document.getElementById("transactionModal").classList.add("active");
-    }
-    function closeModal() {
-    document.getElementById("transactionModal").classList.remove("active");
-}
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     
-</script>
-
 <style>
 :root {
     --brown:#5a3826;
@@ -847,7 +839,8 @@ th {
 
 <header>
     <div class="header-inner">
-        <div class="logo">MY MONEY</div>
+        <div class="logo">MY MONEY
+        </div>
         <div class="subtitle">
             Cash Flow • Needs • Wants • Savings • Tithes
         </div>
@@ -1024,7 +1017,7 @@ th {
 
         </div>
 
-        <button class="add" onclick="openTransactionModal()">+</button>
+        <button class="add" onclick="openModal()">+</button>
 
             + Add Goal
 
@@ -1910,14 +1903,6 @@ th {
     </div>
 
 </div>
-
-    function openModal() {
-    document.getElementById("transactionModal").classList.add("active");
-}
-
-function closeModal() {
-    document.getElementById("transactionModal").classList.remove("active");
-}
     
 <script>
 
@@ -5993,105 +5978,6 @@ function calculateMonthlyGoalAmount(
             targetDate +
             "T00:00:00"
         );
-
-
-    if (target <= today) {
-
-        return remaining;
-
-    }
-
-
-    const months =
-        (
-            target.getFullYear() -
-            today.getFullYear()
-        ) * 12
-        +
-        (
-            target.getMonth() -
-            today.getMonth()
-        );
-
-
-    const monthsRemaining =
-        Math.max(
-            months,
-            1
-        );
-
-
-    return (
-        remaining /
-        monthsRemaining
-    );
-
-}
-
-
-/* =========================================================
-   DELETE GOAL
-   ========================================================= */
-
-function deleteGoal(id) {
-
-    if (
-        !confirm(
-            "Delete this financial goal?"
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    financialGoals =
-        financialGoals.filter(
-            goal =>
-                String(goal.id) !==
-                String(id)
-        );
-
-
-    saveGoals();
-
-    renderGoals();
-
-}
-
-
-/* =========================================================
-   GOAL MODAL OUTSIDE CLICK
-   ========================================================= */
-
-const goalModal =
-    document.getElementById(
-        "goalModal"
-    );
-
-
-if (goalModal) {
-
-    goalModal.addEventListener(
-        "click",
-        function(event) {
-
-            if (
-                event.target ===
-                this
-            ) {
-
-                closeGoalModal();
-
-            }
-
-        }
-    );
-
-/* =========================================================
-   FINANCIAL GOALS
-   ========================================================= */
 
 let financialGoals =
     JSON.parse(
