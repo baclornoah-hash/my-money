@@ -2167,152 +2167,42 @@ let allocationSettings =
         '{"needs":50,"wants":30,"savings":10,"tithes":10}'
     );
 
+    let allocationSettings =
+    JSON.parse(
+        localStorage.getItem("myMoneyAllocation") ||
+        '{"needs":50,"wants":30,"savings":10,"tithes":10}'
+    );
+
 
 function allocation(amount) {
 
     return {
-
-        needs:
-            amount *
-            allocationSettings.needs /
-            100,
-
-        wants:
-            amount *
-            allocationSettings.wants /
-            100,
-
-        savings:
-            amount *
-            allocationSettings.savings /
-            100,
-
-        tithes:
-            amount *
-            allocationSettings.tithes /
-            100
-
+        needs: amount * allocationSettings.needs / 100,
+        wants: amount * allocationSettings.wants / 100,
+        savings: amount * allocationSettings.savings / 100,
+        tithes: amount * allocationSettings.tithes / 100
     };
 
 }
 
-    function updateAllocationSettings() 
-   function updateAllocationLabels() {
+
+/* =========================================================
+   UPDATE ALLOCATION SETTINGS
+   ========================================================= */
+
+function updateAllocationSettings() {
 
     const needs =
-        allocationSettings.needs;
+        Number(document.getElementById("needsPercent").value) || 0;
 
     const wants =
-        allocationSettings.wants;
+        Number(document.getElementById("wantsPercent").value) || 0;
 
     const savings =
-        allocationSettings.savings;
+        Number(document.getElementById("savingsPercent").value) || 0;
 
     const tithes =
-        allocationSettings.tithes;
-
-
-    const allocationSection =
-        document.querySelectorAll(
-            ".section"
-        );
-
-
-    document.getElementById("needsPercent").value =
-        needs;
-
-    document.getElementById("wantsPercent").value =
-        wants;
-
-    document.getElementById("savingsPercent").value =
-        savings;
-
-    document.getElementById("tithesPercent").value =
-        tithes;
-
-
-    const allocationCards =
-        document.querySelectorAll(
-            ".allocation"
-        );
-
-
-    if (allocationCards.length < 2) {
-        return;
-    }
-
-
-    const cards =
-        allocationCards[1]
-        .querySelectorAll(".alloc");
-
-
-    if (cards.length >= 4) {
-
-        cards[0]
-            .querySelector(".alloc-top span:nth-child(2)")
-            .textContent =
-            needs + "%";
-
-        cards[1]
-            .querySelector(".alloc-top span:nth-child(2)")
-            .textContent =
-            wants + "%";
-
-        cards[2]
-            .querySelector(".alloc-top span:nth-child(2)")
-            .textContent =
-            savings + "%";
-
-        cards[3]
-            .querySelector(".alloc-top span:nth-child(2)")
-            .textContent =
-            tithes + "%";
-
-
-        cards[0]
-            .querySelector(".progress div")
-            .style.width =
-            needs + "%";
-
-        cards[1]
-            .querySelector(".progress div")
-            .style.width =
-            wants + "%";
-
-        cards[2]
-            .querySelector(".progress div")
-            .style.width =
-            savings + "%";
-
-        cards[3]
-            .querySelector(".progress div")
-            .style.width =
-            tithes + "%";
-
-    }
-
-}
-
-    const needs =
-        Number(
-            document.getElementById("needsPercent").value
-        ) || 0;
-
-    const wants =
-        Number(
-            document.getElementById("wantsPercent").value
-        ) || 0;
-
-    const savings =
-        Number(
-            document.getElementById("savingsPercent").value
-        ) || 0;
-
-    const tithes =
-        Number(
-            document.getElementById("tithesPercent").value
-        ) || 0;
+        Number(document.getElementById("tithesPercent").value) || 0;
 
 
     const total =
@@ -2329,9 +2219,7 @@ function allocation(amount) {
     if (total !== 100) {
 
         totalDisplay.textContent =
-            "Total: " +
-            total +
-            "% — Must equal 100%";
+            "Total: " + total + "% — Must equal 100%";
 
         totalDisplay.style.color =
             "#a8483b";
@@ -2364,47 +2252,111 @@ function allocation(amount) {
 
     updateAllocationLabels();
 
+    updatePreview();
+
     render();
 
 }
 
 
-function updatePreview() {
-
-    const amount =
-        Number(
-            document.getElementById("amount").value
-        ) || 0;
-
-
-    const a =
-        allocation(amount);
-
-
-    document.getElementById("previewNeeds")
-        .textContent =
-        money(a.needs);
-
-    document.getElementById("previewWants")
-        .textContent =
-        money(a.wants);
-
-    document.getElementById("previewSavings")
-        .textContent =
-        money(a.savings);
-
-    document.getElementById("previewTithes")
-        .textContent =
-        money(a.tithes);
-
-}
-
-
 /* =========================================================
-   TREATING OTHERS
+   UPDATE ALLOCATION LABELS
    ========================================================= */
 
-function checkTreatingOthers() {
+function updateAllocationLabels() {
+
+    const needs =
+        allocationSettings.needs;
+
+    const wants =
+        allocationSettings.wants;
+
+    const savings =
+        allocationSettings.savings;
+
+    const tithes =
+        allocationSettings.tithes;
+
+
+    document.getElementById("needsPercent").value =
+        needs;
+
+    document.getElementById("wantsPercent").value =
+        wants;
+
+    document.getElementById("savingsPercent").value =
+        savings;
+
+    document.getElementById("tithesPercent").value =
+        tithes;
+
+
+    /*
+       Find the Automatic Cash-In Allocation section.
+       It is the second .allocation element on the page.
+    */
+
+    const allocationCards =
+        document.querySelectorAll(".allocation");
+
+
+    if (allocationCards.length < 2) {
+        return;
+    }
+
+
+    const cards =
+        allocationCards[1]
+        .querySelectorAll(".alloc");
+
+
+    if (cards.length < 4) {
+        return;
+    }
+
+
+    cards[0]
+        .querySelector(".alloc-top span:nth-child(2)")
+        .textContent =
+        needs + "%";
+
+    cards[1]
+        .querySelector(".alloc-top span:nth-child(2)")
+        .textContent =
+        wants + "%";
+
+    cards[2]
+        .querySelector(".alloc-top span:nth-child(2)")
+        .textContent =
+        savings + "%";
+
+    cards[3]
+        .querySelector(".alloc-top span:nth-child(2)")
+        .textContent =
+        tithes + "%";
+
+
+    cards[0]
+        .querySelector(".progress div")
+        .style.width =
+        needs + "%";
+
+    cards[1]
+        .querySelector(".progress div")
+        .style.width =
+        wants + "%";
+
+    cards[2]
+        .querySelector(".progress div")
+        .style.width =
+        savings + "%";
+
+    cards[3]
+        .querySelector(".progress div")
+        .style.width =
+        tithes + "%";
+
+}
 
     const item =
         document
