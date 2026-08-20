@@ -630,33 +630,6 @@ th {
     </div>
 </header>
 
-
-<div class="container">
-
-    <div class="section-head">
-        <h2>Currency</h2>
-        <span class="muted">Choose your display currency</span>
-    </div>
-
-    <select
-        id="currencySelect"
-        onchange="changeCurrency(this.value)">
-
-        <option value="PHP">🇵🇭 PHP — ₱ Philippine Peso</option>
-        <option value="USD">🇺🇸 USD — $ US Dollar</option>
-        <option value="EUR">🇪🇺 EUR — € Euro</option>
-        <option value="GBP">🇬🇧 GBP — £ British Pound</option>
-        <option value="JPY">🇯🇵 JPY — ¥ Japanese Yen</option>
-        <option value="KRW">🇰🇷 KRW — ₩ Korean Won</option>
-        <option value="IDR">🇮🇩 IDR — Rp Indonesian Rupiah</option>
-        <option value="AUD">🇦🇺 AUD — A$ Australian Dollar</option>
-        <option value="CAD">🇨🇦 CAD — CA$ Canadian Dollar</option>
-        <option value="SGD">🇸🇬 SGD — S$ Singapore Dollar</option>
-
-    </select>
-
-</div>
-
     <!-- CURRENCY SETTINGS -->
 
     <div class="section" style="margin-bottom:15px;">
@@ -1466,11 +1439,6 @@ const currencySettings = {
         symbol: "S$"
     }
 };
-
-let baseCurrency =
-    localStorage.getItem("myMoneyBaseCurrency") || "PHP";
-
-let exchangeRate = 1;
     
 function money(value) {
 
