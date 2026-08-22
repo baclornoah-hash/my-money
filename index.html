@@ -456,34 +456,65 @@ function money(value){
 }
 
 /* =========================================================
-   PERSISTENT STORAGE (replaces localStorage, which does not
-   work inside this artifact environment)
+   PERSISTENT STORAGE
+   Uses the browser's built-in localStorage.
+   Data survives refreshes and reopening the page.
    ========================================================= */
-async function storageGet(key, fallback){
+
+function storageGet(key, fallback){
   try{
-    const r = await window.storage.get(key);
-    return r ? JSON.parse(r.value) : fallback;
+    const value = localStorage.getItem("myMoney_" + key);
+    return value !== null ? JSON.parse(value) : fallback;
   }catch(e){
+    console.error("Storage load failed for", key, e);
     return fallback;
   }
 }
-async function storageSet(key, value){
-  try{ await window.storage.set(key, JSON.stringify(value)); }
-  catch(e){ console.error("Storage save failed for", key, e); }
+
+function storageSet(key, value){
+  try{
+    localStorage.setItem("myMoney_" + key, JSON.stringify(value));
+  }catch(e){
+    console.error("Storage save failed for", key, e);
+  }
 }
 
-async function loadAll(){
-  transactions = await storageGet("transactions", []);
-  financialGoals = await storageGet("goals", []);
-  groceries = await storageGet("groceries", []);
-  currency = await storageGet("currency", "PHP");
-  allocationSettings = await storageGet("allocationSettings", {needs:50,wants:30,savings:10,tithes:10});
+function loadAll(){
+  transactions = storageGet("transactions", []);
+  financialGoals = storageGet("goals", []);
+  groceries = storageGet("groceries", []);
+  currency = storageGet("currency", "PHP");
+
+  allocationSettings = storageGet(
+    "allocationSettings",
+    {
+      needs:50,
+      wants:30,
+      savings:10,
+      tithes:10
+    }
+  );
 }
-function saveData(){ storageSet("transactions", transactions); }
-function saveGoals(){ storageSet("goals", financialGoals); }
-function saveGroceries(){ storageSet("groceries", groceries); }
-function saveCurrency(){ storageSet("currency", currency); }
-function saveAllocationSettings(){ storageSet("allocationSettings", allocationSettings); }
+
+function saveData(){
+  storageSet("transactions", transactions);
+}
+
+function saveGoals(){
+  storageSet("goals", financialGoals);
+}
+
+function saveGroceries(){
+  storageSet("groceries", groceries);
+}
+
+function saveCurrency(){
+  storageSet("currency", currency);
+}
+
+function saveAllocationSettings(){
+  storageSet("allocationSettings", allocationSettings);
+}
 
 function changeCurrency(value){
   currency = value;
@@ -1379,9 +1410,11 @@ window.addEventListener("resize", function(){ drawChart(getFiltered()); });
 /* =========================================================
    START
    ========================================================= */
-(async function init(){
-  await loadAll();
+(function init(){
+  loadAll();
+
   document.getElementById("currencySelect").value = currency;
+
   updateAllocationLabels();
   renderGoals();
   renderGroceries();
