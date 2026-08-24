@@ -48,6 +48,9 @@ input,select{border:1px solid var(--line);background:#fff;border-radius:9px;padd
 input:focus,select:focus{border-color:var(--terracotta)}
 .chart{width:100%;height:340px}
 canvas{width:100%;height:100%}
+.chart-toggle{display:flex;gap:8px;flex-wrap:wrap}
+.chart-toggle-btn{border:1px solid var(--line);background:#fff;color:var(--brown);padding:8px 12px;border-radius:9px;font-weight:bold;font-size:12px}
+.chart-toggle-btn.active{background:var(--terracotta);color:#fff;border-color:var(--terracotta)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .item-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .item-card{background:#f3e8e1;border-radius:12px;padding:14px}
@@ -260,7 +263,15 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
   </div>
 
   <div class="section">
-    <div class="section-head"><h2>Cash Flow</h2><span class="muted">Green = Cash In • Terracotta = Cash Out</span></div>
+    <div class="section-head">
+      <h2>Cash Flow</h2>
+      <div class="chart-toggle">
+        <button class="chart-toggle-btn active" id="chartMode30days" onclick="setChartMode('30days')">Last 30 Days</button>
+        <button class="chart-toggle-btn" id="chartMode12months" onclick="setChartMode('12months')">Last 12 Months</button>
+        <button class="chart-toggle-btn" id="chartMode5years" onclick="setChartMode('5years')">Last 5 Years</button>
+      </div>
+      <span class="muted">Green = Cash In • Terracotta = Cash Out</span>
+    </div>
     <div class="chart"><canvas id="cashFlowChart"></canvas></div>
   </div>
 
@@ -271,12 +282,12 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
 
   <div class="two">
     <div class="section">
-      <div class="section-head"><h2>Monthly Comparison</h2></div>
+      <div class="section-head"><h2>Monthly Comparison</h2><span class="muted">5 most recent months</span></div>
       <div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash In</th><th>Cash Out</th><th>Remaining</th></tr></thead>
       <tbody id="monthlyTable"></tbody></table></div>
     </div>
     <div class="section">
-      <div class="section-head"><h2>Yearly Comparison</h2></div>
+      <div class="section-head"><h2>Yearly Comparison</h2><span class="muted">5 most recent years</span></div>
       <div class="table-wrap"><table><thead><tr><th>Year</th><th>Cash In</th><th>Cash Out</th><th>Remaining</th></tr></thead>
       <tbody id="yearlyTable"></tbody></table></div>
     </div>
@@ -429,6 +440,7 @@ let financialGoals = [];
 let groceries = [];
 let currency = "PHP";
 let currentType = "income";
+let chartMode = "30days";
 
 const expenseItems = ["Food","Data","Rice","Butane","Cabinet","Table","Rent","Haircut","Commitment",
   "Contribution","Entrance Fee","Tuition Fee","Water","Trash Bag","Soy Sauce","Vinegar","Salt","Sugar",
@@ -873,7 +885,7 @@ function renderMonthly(){
     else groups[key].expense += Number(t.amount);
   });
 
-  const keys = Object.keys(groups).sort().reverse();
+  const keys = Object.keys(groups).sort().reverse().slice(0,5);
   if(!keys.length){ table.innerHTML = `<tr><td colspan="4" class="empty">No monthly data.</td></tr>`; return; }
 
   table.innerHTML = keys.map(key => {
@@ -894,7 +906,7 @@ function renderYearly(){
     else groups[year].expense += Number(t.amount);
   });
 
-  const years = Object.keys(groups).sort((a,b) => b-a);
+  const years = Object.keys(groups).sort((a,b) => b-a).slice(0,5);
   if(!years.length){ table.innerHTML = `<tr><td colspan="4" class="empty">No yearly data.</td></tr>`; return; }
 
   table.innerHTML = years.map(year => {
@@ -906,6 +918,66 @@ function renderYearly(){
 /* =========================================================
    CHART
    ========================================================= */
+function setChartMode(mode){
+  chartMode = mode;
+  ["30days","12months","5years"].forEach(m => {
+    const btn = document.getElementById("chartMode" + m);
+    if(btn) btn.classList.toggle("active", m === mode);
+  });
+  drawChart(getFiltered());
+}
+
+function getChartData(list){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const labels = [], incomes = [], expenses = [];
+
+  if(chartMode === "12months"){
+    for(let i=11;i>=0;i--){
+      const monthStart = new Date(today.getFullYear(), today.getMonth()-i, 1);
+      const y = monthStart.getFullYear(), m = monthStart.getMonth();
+      let inc = 0, exp = 0;
+      list.forEach(t => {
+        const td = new Date(t.date + "T00:00:00");
+        if(td.getFullYear() === y && td.getMonth() === m){
+          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
+        }
+      });
+      labels.push(monthStart.toLocaleDateString("en-US",{month:"short",year:"2-digit"}));
+      incomes.push(inc); expenses.push(exp);
+    }
+  }else if(chartMode === "5years"){
+    for(let i=4;i>=0;i--){
+      const y = today.getFullYear() - i;
+      let inc = 0, exp = 0;
+      list.forEach(t => {
+        const td = new Date(t.date + "T00:00:00");
+        if(td.getFullYear() === y){
+          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
+        }
+      });
+      labels.push(String(y));
+      incomes.push(inc); expenses.push(exp);
+    }
+  }else{
+    for(let i=29;i>=0;i--){
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      let inc = 0, exp = 0;
+      list.forEach(t => {
+        if(t.date === key){
+          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
+        }
+      });
+      labels.push(shortDate(key));
+      incomes.push(inc); expenses.push(exp);
+    }
+  }
+
+  return {labels, incomes, expenses};
+}
+
 function drawChart(list){
   const canvas = document.getElementById("cashFlowChart");
   const rect = canvas.getBoundingClientRect();
@@ -917,7 +989,10 @@ function drawChart(list){
   const width = rect.width, height = rect.height;
   ctx.clearRect(0,0,width,height);
 
-  if(!list.length){
+  const {labels, incomes, expenses} = getChartData(list);
+  const hasData = incomes.some(v => v > 0) || expenses.some(v => v > 0);
+
+  if(!hasData){
     ctx.fillStyle = "#776b63";
     ctx.font = "15px Arial";
     ctx.textAlign = "center";
@@ -925,16 +1000,6 @@ function drawChart(list){
     return;
   }
 
-  const groups = {};
-  list.forEach(t => {
-    if(!groups[t.date]) groups[t.date] = {income:0, expense:0};
-    if(t.type === "income") groups[t.date].income += Number(t.amount);
-    else groups[t.date].expense += Number(t.amount);
-  });
-
-  const dates = Object.keys(groups).sort();
-  const incomes = dates.map(d => groups[d].income);
-  const expenses = dates.map(d => groups[d].expense);
   const max = Math.max(...incomes, ...expenses, 1);
 
   const left = 45, right = 20, top = 35, bottom = 35;
@@ -967,11 +1032,11 @@ function drawChart(list){
   drawLine(expenses, "#b85f3d");
 
   ctx.font = "11px Arial"; ctx.textAlign = "center"; ctx.fillStyle = "#776b63";
-  const count = Math.min(dates.length,6);
+  const count = Math.min(labels.length,8);
   for(let i=0;i<count;i++){
-    const index = Math.floor(i * (dates.length-1) / Math.max(count-1,1));
-    const x = left + (index / Math.max(dates.length-1,1)) * chartWidth;
-    ctx.fillText(shortDate(dates[index]), x, height-10);
+    const index = Math.floor(i * (labels.length-1) / Math.max(count-1,1));
+    const x = left + (index / Math.max(labels.length-1,1)) * chartWidth;
+    ctx.fillText(labels[index], x, height-10);
   }
 
   ctx.textAlign = "left";
