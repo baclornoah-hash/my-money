@@ -3,1488 +3,5770 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Money Dashboard</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<title>MindCal</title>
+
 <style>
+
 :root{
-  --brown:#5a3826; --dark:#241712; --terracotta:#b85f3d; --terracotta-light:#d48768;
-  --cream:#f5eee8; --white:#fffaf6; --black:#17120f; --muted:#776b63; --line:#dfd0c5;
-  --green:#4f7659; --red:#a8483b; --gold:#ad8240; --blue:#536d86;
+    --baby:#bfe8f5;
+    --baby2:#eaf8fc;
+    --navy:#102a43;
+    --navy2:#243b53;
+    --white:#ffffff;
+    --gray:#627d98;
+    --border:#d7e8ef;
+    --green:#4caf7a;
+    --red:#d9534f;
+    --priority-must:#e5484d;
+    --priority-could:#f2b705;
+    --priority-none:#c4d1dc;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--cream);color:var(--black);font-family:Arial,Helvetica,sans-serif}
-button,input,select{font:inherit}
-button{cursor:pointer}
-header{background:var(--dark);color:#fff;padding:25px 20px}
-.header-inner{max-width:1400px;margin:auto}
-.logo{font-size:29px;font-weight:900}
-.subtitle{margin-top:6px;color:#d8c8bd}
-.container{max-width:1400px;margin:auto;padding:22px}
-.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}
-.card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 18px rgba(50,30,20,.06)}
-.label{color:var(--muted);font-size:11px;font-weight:bold;letter-spacing:.5px}
-.value{font-size:27px;font-weight:900;margin-top:7px}
-.balance{color:var(--brown)} .income{color:var(--green)} .expense{color:var(--red)} .saving-color{color:var(--green)}
-.section{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:20px}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
-.section-head h2{margin:0;font-size:20px}
-.muted{color:var(--muted);font-size:12px}
-.allocation{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.alloc{padding:18px;background:#f5ece6;border-radius:15px}
-.alloc-top{display:flex;justify-content:space-between;font-weight:bold}
-.alloc-amount{font-size:21px;font-weight:900;margin-top:8px}
-.progress{height:8px;margin-top:12px;border-radius:10px;overflow:hidden;background:#dfd3cc}
-.progress div{height:100%}
-.needs-bar{background:var(--brown)} .wants-bar{background:var(--terracotta)} .savings-bar{background:var(--green)} .tithes-bar{background:var(--gold)}
-.btn{border:0;padding:10px 14px;border-radius:10px;font-weight:bold}
-.btn-primary{background:var(--terracotta);color:#fff}
-.btn-dark{background:var(--brown);color:#fff}
-.btn-green{background:var(--green);color:#fff}
-.btn-red{background:var(--red);color:#fff}
-.btn-blue{background:var(--blue);color:#fff}
-.btn-light{background:#eaded6;color:var(--black)}
-.filters{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:20px}
-input,select{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 12px;outline:none}
-input:focus,select:focus{border-color:var(--terracotta)}
-.chart{width:100%;height:340px}
-canvas{width:100%;height:100%}
-.chart-toggle{display:flex;gap:8px;flex-wrap:wrap}
-.chart-toggle-btn{border:1px solid var(--line);background:#fff;color:var(--brown);padding:8px 12px;border-radius:9px;font-weight:bold;font-size:12px}
-.chart-toggle-btn.active{background:var(--terracotta);color:#fff;border-color:var(--terracotta)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.item-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.item-card{background:#f3e8e1;border-radius:12px;padding:14px}
-.item-card strong{display:block;margin-bottom:6px}
-.item-card span{color:var(--terracotta);font-size:17px;font-weight:900}
-.table-wrap{width:100%;overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-th{color:var(--muted);font-size:10px;text-transform:uppercase}
-.green-text{color:var(--green);font-weight:bold}
-.red-text{color:var(--red);font-weight:bold}
-.brown-text{color:var(--brown);font-weight:bold}
-.delete{background:transparent;color:var(--red);border:0;font-size:16px}
-.planned-transaction{color:#b8a99f;background:#faf4ef}
-.planned-transaction td,.planned-transaction .green-text,.planned-transaction .red-text,.planned-transaction .brown-text,.planned-transaction .delete{color:#b8a99f}
-.empty{text-align:center;padding:30px;color:var(--muted)}
-.backup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.backup-box{background:#f4e9e2;border-radius:14px;padding:17px}
-.backup-box h3{margin-top:0}
-.backup-box p{color:var(--muted);font-size:13px;line-height:1.5}
-.modal,.goal-modal,.grocery-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(20,13,10,.72);justify-content:center;align-items:center;padding:15px}
-.modal.active,.goal-modal.active,.grocery-modal.active{display:flex}
-.modal-box,.goal-modal-box,.grocery-modal-box{width:100%;max-width:570px;max-height:92vh;overflow-y:auto;background:var(--white);border-radius:20px;padding:25px}
-.modal-head,.goal-modal-head,.grocery-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.modal-head h2,.goal-modal-head h2,.grocery-modal-head h2{margin:0}
-.close{background:transparent;border:0;font-size:25px}
-.form-group,.goal-form-group,.grocery-form-group{margin-bottom:15px}
-.form-group label,.goal-form-group label,.grocery-form-group label{display:block;margin-bottom:6px;font-size:11px;font-weight:bold;color:var(--muted)}
-.form-group input,.form-group select,.goal-form-group input,.goal-form-group select,.grocery-form-group input{width:100%}
-.amount-input{font-size:25px;font-weight:bold}
-.type-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.type-btn{border:0;padding:13px;border-radius:10px;background:#eaded5;font-weight:bold}
-.type-in-active{background:var(--green);color:#fff}
-.type-out-active{background:var(--terracotta);color:#fff}
-.disabled-category{opacity:.45;pointer-events:none}
-.preview{background:#f0e3db;border-radius:13px;padding:15px;margin-bottom:15px}
-.preview-title{font-weight:bold;margin-bottom:7px}
-.preview-row{display:flex;justify-content:space-between;padding:4px 0}
-.warning{background:#fff0e8;border:1px solid #e2b5a1;border-radius:10px;padding:10px;color:#7a3d2b;font-size:12px;margin-bottom:15px}
-.file-input{display:none}
-.file-label{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--brown);color:#fff;font-weight:bold;cursor:pointer}
-.add{position:fixed;right:25px;bottom:25px;width:65px;height:65px;border-radius:50%;border:0;background:var(--terracotta);color:#fff;font-size:34px;box-shadow:0 8px 25px rgba(70,35,20,.35);z-index:500}
-.goals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.goal-card{background:#f5ece6;border:1px solid var(--line);border-radius:15px;padding:17px;position:relative}
-.goal-card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.goal-icon{font-size:28px}
-.goal-name{font-size:17px;font-weight:900;margin-top:5px}
-.goal-category{color:var(--muted);font-size:11px;margin-top:3px}
-.goal-priority{font-size:10px;font-weight:bold;padding:5px 8px;border-radius:20px;background:#eaded6}
-.goal-amounts{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
-.goal-saved,.goal-target{font-weight:900}
-.goal-saved{color:var(--green)} .goal-target{color:var(--brown)}
-.goal-progress{height:9px;background:#dfd3cc;border-radius:10px;overflow:hidden;margin-top:12px}
-.goal-progress-bar{height:100%;background:var(--green);width:0%;transition:width .3s ease}
-.goal-percent{margin-top:8px;font-size:12px;font-weight:bold}
-.goal-details{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.goal-detail-row{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0}
-.goal-detail-row span:first-child{color:var(--muted)}
-.goal-delete{border:0;background:transparent;color:var(--red);font-size:16px;cursor:pointer}
-.goal-empty{grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)}
-.goal-add-button,.grocery-add-button{border:0;background:var(--terracotta);color:#fff;border-radius:10px;padding:10px 14px;font-weight:bold;cursor:pointer}
-.goal-add-button:hover,.grocery-add-button:hover{opacity:.9}
-.goal-emoji-input{font-size:25px;text-align:center}
-/* CATEGORY REMAINING */
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.cat-card{padding:18px;background:#f5ece6;border-radius:15px}
-.cat-card-top{display:flex;justify-content:space-between;font-weight:bold}
-.cat-row{display:flex;justify-content:space-between;font-size:12px;margin-top:10px;color:var(--muted)}
-.cat-remaining{font-size:20px;font-weight:900;margin-top:6px}
-.cat-over{color:var(--red)!important}
-/* GROCERY LIST */
-.grocery-add-row{display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-bottom:16px}
-.grocery-list{display:flex;flex-direction:column;gap:8px}
-.grocery-item{display:flex;align-items:center;gap:12px;background:#f5ece6;border-radius:12px;padding:12px 14px}
-.grocery-item.checked{opacity:.55}
-.grocery-item.checked .grocery-name{text-decoration:line-through}
-.grocery-checkbox{width:20px;height:20px;flex:none}
-.grocery-name{flex:1;font-weight:bold}
-.grocery-price{color:var(--terracotta);font-weight:900;min-width:90px;text-align:right}
-.grocery-totals{display:flex;justify-content:flex-end;gap:24px;margin-top:16px;flex-wrap:wrap}
-.grocery-total-box{background:#f0e3db;border-radius:12px;padding:12px 18px;text-align:right}
-.grocery-total-label{font-size:10px;color:var(--muted);font-weight:bold;text-transform:uppercase}
-.grocery-total-value{font-size:19px;font-weight:900;color:var(--brown)}
-@media(max-width:950px){
-  .dashboard,.allocation,.cat-grid{grid-template-columns:repeat(2,1fr)}
-  .item-grid{grid-template-columns:repeat(3,1fr)}
-  .two{grid-template-columns:1fr}
-  .goals-grid{grid-template-columns:repeat(2,1fr)}
+
+*{
+    box-sizing:border-box;
 }
-@media(max-width:600px){
-  .container{padding:12px}
-  .dashboard,.allocation,.cat-grid{grid-template-columns:1fr 1fr;gap:9px}
-  .card,.alloc,.cat-card{padding:14px}
-  .value{font-size:20px}
-  .item-grid{grid-template-columns:1fr 1fr}
-  .backup-grid{grid-template-columns:1fr}
-  .section{padding:15px}
-  .logo{font-size:23px}
-  .goals-grid{grid-template-columns:1fr}
-  .grocery-add-row{grid-template-columns:1fr}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:var(--baby2);
+    color:var(--navy);
 }
+
+/* HEADER */
+
+header{
+    background:var(--navy);
+    color:white;
+    padding:18px 5%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.logo{
+    font-size:25px;
+    font-weight:bold;
+}
+
+.subtitle{
+    font-size:12px;
+    opacity:.75;
+}
+
+header button{
+    border:0;
+    background:var(--baby);
+    color:var(--navy);
+    padding:10px 15px;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* MAIN */
+
+.container{
+    width:94%;
+    max-width:1300px;
+    margin:25px auto;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 8px 25px rgba(16,42,67,.08);
+}
+
+/* CALENDAR */
+
+.calendar-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.calendar-top h2{
+    margin:0;
+}
+
+.nav button{
+    border:0;
+    background:var(--baby);
+    color:var(--navy);
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.weekdays,
+.calendar{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+}
+
+.weekday{
+    text-align:center;
+    font-size:12px;
+    font-weight:bold;
+    color:var(--gray);
+    padding:8px 0;
+}
+
+.day{
+    min-height:105px;
+    border:1px solid var(--border);
+    padding:6px;
+    cursor:pointer;
+    background:white;
+    touch-action:none;
+    user-select:none;
+}
+
+.day:hover{
+    background:var(--baby2);
+}
+
+.day.today{
+    background:#f0fbfe;
+}
+
+.day.selected{
+    outline:3px solid var(--baby);
+}
+
+.day.drag-range{
+    background:var(--baby);
+    outline:2px dashed var(--navy);
+    outline-offset:-2px;
+}
+
+.day-number{
+    font-weight:bold;
+    font-size:13px;
+    margin-bottom:5px;
+}
+
+.event{
+    font-size:10px;
+    padding:4px;
+    margin:3px 0;
+    border-radius:5px;
+    background:var(--baby);
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+
+.event.completed{
+    text-decoration:line-through;
+    opacity:.5;
+}
+
+.event.cancelled{
+    text-decoration:line-through;
+    opacity:.35;
+}
+
+.event.priority-must{
+    border-left:3px solid var(--priority-must);
+}
+
+.event.priority-could{
+    border-left:3px solid var(--priority-could);
+}
+
+.event.priority-none{
+    border-left:3px solid var(--priority-none);
+}
+
+/* ADD BUTTON */
+
+.add-event{
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:11px;
+    background:var(--navy);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    margin-bottom:18px;
+}
+
+.add-event:hover{
+    background:var(--navy2);
+}
+
+/* EVENTS */
+
+.event-card{
+    background:#f6fbfd;
+    border:1px solid var(--border);
+    border-left:4px solid var(--priority-none);
+    padding:12px;
+    border-radius:11px;
+    margin-bottom:10px;
+}
+
+.event-card.priority-must{
+    border-left-color:var(--priority-must);
+}
+
+.event-card.priority-could{
+    border-left-color:var(--priority-could);
+}
+
+.event-card.priority-none{
+    border-left-color:var(--priority-none);
+}
+
+.priority-badge{
+    display:inline-block;
+    font-size:11px;
+    font-weight:bold;
+    padding:2px 8px;
+    border-radius:20px;
+    background:var(--baby2);
+    margin-bottom:6px;
+}
+
+.event-card h4{
+    margin:0 0 5px;
+}
+
+.event-info{
+    font-size:12px;
+    color:var(--gray);
+    margin-bottom:8px;
+}
+
+.actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+
+    .edit{
+    background:#dceffc;
+    color:var(--navy);
+}
+    
+.actions button{
+    border:0;
+    border-radius:7px;
+    padding:6px 9px;
+    font-size:11px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.complete{
+    background:#ddf5e8;
+    color:#217346;
+}
+
+.move{
+    background:var(--baby);
+    color:var(--navy);
+}
+
+.cancel{
+    background:#fff0ef;
+    color:var(--red);
+}
+
+.delete{
+    background:#eeeeee;
+}
+
+/* BRAIN DUMP */
+
+textarea{
+    width:100%;
+    min-height:130px;
+    resize:vertical;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px;
+}
+
+.save-dump{
+    border:0;
+    background:var(--baby);
+    color:var(--navy);
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:8px;
+}
+
+.message{
+    font-size:12px;
+    color:var(--green);
+    margin-top:7px;
+}
+
+/* MODAL */
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(16,42,67,.55);
+    z-index:999;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    background:white;
+    width:100%;
+    max-width:600px;
+    max-height:90vh;
+    overflow-y:auto;
+    border-radius:18px;
+    padding:22px;
+}
+
+.modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.modal-header h2{
+    margin-top:0;
+}
+
+.close{
+    border:0;
+    background:none;
+    font-size:28px;
+    cursor:pointer;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.form-group{
+    margin-bottom:10px;
+}
+
+.full{
+    grid-column:1 / -1;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:5px;
+}
+
+input,
+select{
+    width:100%;
+    padding:10px;
+    border:1px solid var(--border);
+    border-radius:9px;
+    background:white;
+}
+
+textarea{
+    font-family:Arial,sans-serif;
+}
+
+.save-event{
+    width:100%;
+    border:0;
+    background:var(--navy);
+    color:white;
+    padding:14px;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.audio-preview{
+    width:100%;
+    margin-top:8px;
+}
+
+.empty{
+    text-align:center;
+    color:var(--gray);
+    padding:20px;
+    font-size:13px;
+}
+
+/* MOBILE */
+
+@media(max-width:850px){
+
+    .layout{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:550px){
+
+    header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .full{
+        grid-column:auto;
+    }
+
+    .day{
+        min-height:70px;
+    }
+
+    .event{
+        font-size:9px;
+    }
+
+}
+
+    .day-selector{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+}
+
+.day-option{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    background:var(--baby2);
+    border:1px solid var(--border);
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:12px;
+}
+
+.day-option input{
+    width:auto;
+}
+
+
+/* WEEK VIEW */
+
+.view-switcher{
+    display:flex;
+    gap:6px;
+    margin-bottom:15px;
+}
+
+.view-button{
+    border:1px solid var(--border);
+    background:white;
+    color:var(--navy);
+    padding:8px 14px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.view-button.active{
+    background:var(--navy);
+    color:white;
+}
+
+    /* WEEKLY CALENDAR */
+
+.week-calendar{
+    display:grid;
+    grid-template-columns:70px repeat(7, 1fr);
+    border:1px solid var(--border);
+    overflow-x:auto;
+}
+
+.week-time{
+    min-height:60px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:8px;
+    font-size:11px;
+    color:var(--gray);
+    background:#f8fcfd;
+}
+
+.week-day-header{
+    min-height:55px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:8px;
+    text-align:center;
+    font-size:12px;
+    font-weight:bold;
+    background:var(--baby2);
+}
+
+.week-cell{
+    min-height:60px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:3px;
+    cursor:pointer;
+    background:white;
+    touch-action:none;
+    user-select:none;
+}
+
+.week-cell:hover{
+    background:var(--baby2);
+}
+
+.week-cell.drag-range{
+    background:var(--baby);
+    outline:2px dashed var(--navy);
+    outline-offset:-2px;
+}
+
+.week-event{
+    background:var(--baby);
+    border-radius:6px;
+    padding:5px;
+    margin:2px 0;
+    font-size:10px;
+    overflow:hidden;
+}
+
+.week-event.completed{
+    text-decoration:line-through;
+    opacity:.5;
+}
+
+.week-event.cancelled{
+    text-decoration:line-through;
+    opacity:.35;
+}
+
+.week-event.priority-must{
+    border-left:3px solid var(--priority-must);
+}
+
+.week-event.priority-could{
+    border-left:3px solid var(--priority-could);
+}
+
+.week-event.priority-none{
+    border-left:3px solid var(--priority-none);
+}
+
+/* DEDICATED (NON-HOURLY) WEEK SECTIONS */
+
+.week-section-cell{
+    min-height:34px;
+    border-right:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    padding:4px;
+    cursor:pointer;
+    background:white;
+}
+
+.week-section-cell:hover{
+    background:var(--baby2);
+}
+
+.week-section-group{
+    margin-bottom:4px;
+}
+
+.week-section-group:last-child{
+    margin-bottom:0;
+}
+
+.week-section-label{
+    font-size:9px;
+    font-weight:bold;
+    color:var(--gray);
+    text-transform:uppercase;
+    letter-spacing:.3px;
+    margin-bottom:2px;
+}
+
+.week-timed-divider{
+    grid-column:1 / -1;
+    background:var(--navy);
+    color:white;
+    font-size:12px;
+    font-weight:bold;
+    padding:8px 10px;
+    letter-spacing:.3px;
+}
+
+/* DAILY VIEW */
+
+.day-calendar{
+    display:grid;
+    grid-template-columns:90px 1fr;
+    border:1px solid var(--border);
+    overflow-x:auto;
+}
+
+/* HABIT TRACKER */
+
+.habit-tracker{
+    overflow-x:auto;
+}
+
+.habit-add-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+}
+
+.habit-add-row input[type="text"]{
+    flex:1;
+    min-width:140px;
+}
+
+.habit-add-row select{
+    width:auto;
+}
+
+.habit-add-row button{
+    border:0;
+    background:var(--navy);
+    color:white;
+    padding:10px 14px;
+    border-radius:9px;
+    font-weight:bold;
+    cursor:pointer;
+    white-space:nowrap;
+}
+
+.habit-add-row button:hover{
+    background:var(--navy2);
+}
+
+.habit-table{
+    border-collapse:collapse;
+    min-width:100%;
+}
+
+.habit-table th,
+.habit-table td{
+    border:1px solid var(--border);
+    text-align:center;
+    padding:4px;
+    font-size:11px;
+}
+
+.habit-table th{
+    background:var(--baby2);
+    color:var(--navy);
+    font-weight:bold;
+    min-width:26px;
+}
+
+.habit-name-cell{
+    text-align:left !important;
+    white-space:nowrap;
+    font-size:12px;
+    font-weight:bold;
+    padding:6px 10px !important;
+    background:#f8fcfd;
+    position:sticky;
+    left:0;
+    z-index:2;
+}
+
+.habit-check{
+    width:22px;
+    height:22px;
+    border-radius:5px;
+    border:1px solid var(--border);
+    background:white;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:bold;
+    color:white;
+    margin:0 auto;
+}
+
+.habit-check:hover{
+    background:var(--baby2);
+}
+
+.habit-check.done{
+    background:var(--green);
+    border-color:var(--green);
+}
+
+.habit-delete{
+    border:0;
+    background:#fff0ef;
+    color:var(--red);
+    border-radius:6px;
+    padding:2px 6px;
+    font-size:10px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-left:8px;
+}
+
+.habit-progress-section{
+    margin-top:22px;
+}
+
+.habit-progress-title{
+    font-size:13px;
+    font-weight:bold;
+    color:var(--navy);
+    margin-bottom:10px;
+}
+
+.habit-progress-chart{
+    display:flex;
+    align-items:flex-end;
+    gap:2px;
+    height:90px;
+    border-bottom:1px solid var(--border);
+    min-width:100%;
+}
+
+.habit-progress-bar{
+    flex:1;
+    background:var(--baby);
+    border-radius:3px 3px 0 0;
+    min-width:6px;
+}
+
+.habit-empty{
+    text-align:center;
+    color:var(--gray);
+    padding:30px;
+    font-size:13px;
+}
+
+    .smart-schedule{
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:11px;
+    background:var(--baby);
+    color:var(--navy);
+    font-weight:bold;
+    cursor:pointer;
+    margin-bottom:18px;
+}
+
+.smart-schedule:hover{
+    background:#a9deed;
+}
+
+    /* SMART SCHEDULING */
+
+.smart-result{
+    background:var(--baby2);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:15px;
+    margin-top:15px;
+}
+
+.smart-result h3{
+    margin-top:0;
+}
+
+.smart-result button{
+    border:0;
+    background:var(--navy);
+    color:white;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.smart-result button:hover{
+    background:var(--navy2);
+}
+
+.smart-time{
+    font-size:20px;
+    font-weight:bold;
+    color:var(--navy);
+    margin:8px 0;
+}
+    
 </style>
 </head>
+
+
 <body>
+
 <header>
-  <div class="header-inner">
-    <div class="logo">MY MONEY</div>
-    <div class="subtitle">Cash Flow • Needs • Wants • Savings • Tithes</div>
-  </div>
+
+    <div>
+        <div class="logo">🧠 MindCal</div>
+        <div class="subtitle">
+            An ADHD-friendly calendar
+        </div>
+    </div>
+
+    <button id="headerAdd">
+        ＋ Add Event
+    </button>
+
 </header>
+
 
 <div class="container">
 
-  <div class="section" style="margin-bottom:15px;">
-    <div class="section-head">
-      <h2>Currency</h2>
-      <span class="muted">Choose your display currency</span>
-    </div>
-    <select id="currencySelect" onchange="changeCurrency(this.value)">
-      <option value="PHP">🇵🇭 PHP — ₱ Philippine Peso</option>
-      <option value="USD">🇺🇸 USD — $ US Dollar</option>
-      <option value="EUR">🇪🇺 EUR — € Euro</option>
-      <option value="GBP">🇬🇧 GBP — £ British Pound</option>
-      <option value="JPY">🇯🇵 JPY — ¥ Japanese Yen</option>
-      <option value="KRW">🇰🇷 KRW — ₩ Korean Won</option>
-      <option value="IDR">🇮🇩 IDR — Rp Indonesian Rupiah</option>
-      <option value="AUD">🇦🇺 AUD — A$ Australian Dollar</option>
-      <option value="CAD">🇨🇦 CAD — C$ Canadian Dollar</option>
-      <option value="SGD">🇸🇬 SGD — S$ Singapore Dollar</option>
-      <option value="KHR">🇰🇭 KHR — Cambodian Riel</option>
-      <option value="MMK">🇲🇲 MMK — Myanmar Kyat</option>
-    </select>
-  </div>
+<div class="layout">
 
-  <div class="section" style="margin-bottom:15px;">
-    <div class="section-head">
-      <h2>Allocation Settings</h2>
-      <span class="muted">Adjust how every Cash In is divided</span>
-    </div>
-    <div class="allocation">
-      <div class="alloc"><div class="alloc-top"><span>NEEDS</span>
-        <input type="number" id="needsPercent" min="0" max="100" step="1" value="50" onchange="updateAllocationSettings()" style="width:70px;"><span>%</span></div></div>
-      <div class="alloc"><div class="alloc-top"><span>WANTS</span>
-        <input type="number" id="wantsPercent" min="0" max="100" step="1" value="30" onchange="updateAllocationSettings()" style="width:70px;"><span>%</span></div></div>
-      <div class="alloc"><div class="alloc-top"><span>SAVINGS</span>
-        <input type="number" id="savingsPercent" min="0" max="100" step="1" value="10" onchange="updateAllocationSettings()" style="width:70px;"><span>%</span></div></div>
-      <div class="alloc"><div class="alloc-top"><span>TITHES</span>
-        <input type="number" id="tithesPercent" min="0" max="100" step="1" value="10" onchange="updateAllocationSettings()" style="width:70px;"><span>%</span></div></div>
-    </div>
-    <div id="allocationTotal" class="muted" style="margin-top:12px;">Total: 100%</div>
-  </div>
 
-  <div class="dashboard">
-    <div class="card"><div class="label">REMAINING BALANCE</div><div class="value balance" id="balance">₱0.00</div></div>
-    <div class="card"><div class="label">TOTAL CASH IN</div><div class="value income" id="totalIn">₱0.00</div></div>
-    <div class="card"><div class="label">TOTAL CASH OUT</div><div class="value expense" id="totalOut">₱0.00</div></div>
-    <div class="card"><div class="label">SAVINGS ALLOCATED</div><div class="value saving-color" id="totalSavings">₱0.00</div></div>
-  </div>
+<!-- CALENDAR -->
 
-  <!-- LIFE PLANNER -->
-  <div class="section">
-    <div class="section-head">
-      <div><h2>🧭 Life Planner</h2>
-        <div class="muted" style="margin-top:5px;">Turn your money into goals for the life you want to build.</div></div>
-      <button class="goal-add-button" onclick="openGoalModal()">+ Add Goal</button>
-    </div>
-    <div class="goals-grid" id="goalsGrid"></div>
-  </div>
+<div class="card">
 
-  <!-- REMAINING BY CATEGORY (NEW) -->
-  <div class="section">
-    <div class="section-head">
-      <h2>Remaining by Category</h2>
-      <span class="muted">Allocated vs. spent for Needs, Wants, Savings &amp; Tithes</span>
-    </div>
-    <div class="cat-grid" id="categoryRemainingGrid"></div>
-  </div>
+    <div class="calendar-top">
 
-  <div class="section">
-    <div class="section-head">
-      <h2>Automatic Cash-In Allocation</h2>
-      <span class="muted">Every Cash In is divided automatically</span>
-    </div>
-    <div class="allocation">
-      <div class="alloc"><div class="alloc-top"><span>NEEDS</span><span id="needsPercentLabel">50%</span></div>
-        <div class="alloc-amount" id="needsAllocation">₱0.00</div>
-        <div class="progress"><div class="needs-bar" id="needsBar" style="width:50%"></div></div></div>
-      <div class="alloc"><div class="alloc-top"><span>WANTS</span><span id="wantsPercentLabel">30%</span></div>
-        <div class="alloc-amount" id="wantsAllocation">₱0.00</div>
-        <div class="progress"><div class="wants-bar" id="wantsBar" style="width:30%"></div></div></div>
-      <div class="alloc"><div class="alloc-top"><span>SAVINGS</span><span id="savingsPercentLabel">10%</span></div>
-        <div class="alloc-amount" id="savingsAllocation">₱0.00</div>
-        <div class="progress"><div class="savings-bar" id="savingsBar" style="width:10%"></div></div></div>
-      <div class="alloc"><div class="alloc-top"><span>TITHES</span><span id="tithesPercentLabel">10%</span></div>
-        <div class="alloc-amount" id="tithesAllocation">₱0.00</div>
-        <div class="progress"><div class="tithes-bar" id="tithesBar" style="width:10%"></div></div></div>
-    </div>
-  </div>
-
-  <div class="filters">
-    <input type="date" id="filterDate" onchange="render()">
-    <select id="filterMonth" onchange="render()"><option value="all">All Months</option></select>
-    <select id="filterYear" onchange="render()"><option value="all">All Years</option></select>
-    <select id="filterType" onchange="render()">
-      <option value="all">Cash In + Cash Out</option>
-      <option value="income">Cash In</option>
-      <option value="expense">Cash Out</option>
-    </select>
-    <input type="text" id="search" placeholder="Search..." oninput="render()">
-  </div>
-
-  <div class="section">
-    <div class="section-head">
-      <h2>Cash Flow</h2>
-      <div class="chart-toggle">
-        <button class="chart-toggle-btn active" id="chartMode30days" onclick="setChartMode('30days')">Last 30 Days</button>
-        <button class="chart-toggle-btn" id="chartMode12months" onclick="setChartMode('12months')">Last 12 Months</button>
-        <button class="chart-toggle-btn" id="chartMode5years" onclick="setChartMode('5years')">Last 5 Years</button>
-      </div>
-      <span class="muted">Green = Cash In • Terracotta = Cash Out</span>
-    </div>
-    <div class="chart"><canvas id="cashFlowChart"></canvas></div>
-  </div>
-
-  <div class="section">
-    <div class="section-head"><h2>Expense Breakdown</h2><span class="muted">See exactly how much goes to every item</span></div>
-    <div class="item-grid" id="expenseBreakdown"></div>
-  </div>
-
-  <div class="two">
-    <div class="section">
-      <div class="section-head"><h2>Monthly Comparison</h2><span class="muted">5 most recent months</span></div>
-      <div class="table-wrap"><table><thead><tr><th>Month</th><th>Cash In</th><th>Cash Out</th><th>Remaining</th></tr></thead>
-      <tbody id="monthlyTable"></tbody></table></div>
-    </div>
-    <div class="section">
-      <div class="section-head"><h2>Yearly Comparison</h2><span class="muted">5 most recent years</span></div>
-      <div class="table-wrap"><table><thead><tr><th>Year</th><th>Cash In</th><th>Cash Out</th><th>Remaining</th></tr></thead>
-      <tbody id="yearlyTable"></tbody></table></div>
-    </div>
-  </div>
-
-  <!-- GROCERY LIST (NEW) -->
-  <div class="section">
-    <div class="section-head">
-      <h2>🛒 Grocery List</h2>
-      <span class="muted">Check items off as you buy them</span>
+    <div class="nav">
+        <button id="previousMonth">‹</button>
+        <button id="nextMonth">›</button>
     </div>
 
-    <div class="grocery-add-row">
-      <input type="text" id="groceryName" placeholder="Item name (e.g. Rice)">
-      <input type="number" id="groceryPrice" min="0" step="0.01" placeholder="Price">
-      <button class="grocery-add-button" onclick="addGroceryItem()">+ Add</button>
-    </div>
+    <h2 id="monthTitle"></h2>
 
-    <div class="grocery-list" id="groceryList"></div>
+    <div class="nav">
 
-    <div class="grocery-totals">
-      <div class="grocery-total-box">
-        <div class="grocery-total-label">Checked total</div>
-        <div class="grocery-total-value" id="groceryCheckedTotal">₱0.00</div>
-      </div>
-      <div class="grocery-total-box">
-        <div class="grocery-total-label">List total</div>
-        <div class="grocery-total-value" id="groceryListTotal">₱0.00</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-head"><h2>Backup &amp; Restore</h2><span class="muted">Keep a copy of your financial data</span></div>
-    <div class="backup-grid">
-      <div class="backup-box">
-        <h3>Export Backup</h3>
-        <p>Download your transactions as CSV or Excel spreadsheet. Keep the downloaded file somewhere safe so you can restore your data later.</p>
-        <button class="btn btn-dark" onclick="exportCSV()">Download CSV</button>
-        <button class="btn btn-green" onclick="exportXLSX()">Download Excel</button>
-      </div>
-      <div class="backup-box">
-        <h3>Restore Backup</h3>
-        <p>Select a CSV, Excel XLSX/XLS file, or a spreadsheet exported from Google Sheets. The system will read the file and import the transactions into this dashboard.</p>
-        <label for="backupFile" class="file-label">Restore Backup</label>
-        <input class="file-input" type="file" id="backupFile" accept=".csv,.xlsx,.xls" onchange="handleBackupFile(event)">
-        <div id="restoreStatus" class="muted" style="margin-top:10px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-head"><h2>Transactions</h2><span class="muted" id="transactionCount">0 transactions</span></div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Description</th><th>Item</th><th>Category</th><th>Cash Flow</th><th>Remaining Balance</th><th></th></tr></thead>
-        <tbody id="transactionTable"></tbody>
-      </table>
-    </div>
-  </div>
+    <button id="todayButton">
+        Today
+    </button>
 
 </div>
 
-<button class="add" onclick="openModal()">+</button>
-
-<!-- ADD TRANSACTION MODAL -->
-<div class="modal" id="transactionModal">
-  <div class="modal-box">
-    <div class="modal-head"><h2>Add Transaction</h2><button class="close" onclick="closeModal()">×</button></div>
-    <div class="form-group"><label>DATE</label><input type="date" id="date"></div>
-    <div class="form-group"><label>AMOUNT</label><input type="number" id="amount" class="amount-input" min="0" step="0.01" placeholder="0.00" oninput="updatePreview()"></div>
-    <div class="form-group">
-      <label>TRANSACTION TYPE</label>
-      <div class="type-buttons">
-        <button id="cashInBtn" class="type-btn type-in-active" onclick="setTransactionType('income')">+ CASH IN</button>
-        <button id="cashOutBtn" class="type-btn" onclick="setTransactionType('expense')">− CASH OUT</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>CATEGORY</label>
-      <select id="category" onchange="updatePreview()">
-        <option value="Needs">Needs</option>
-        <option value="Wants">Wants</option>
-        <option value="Savings">Savings</option>
-        <option value="Tithes">Tithes</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>ITEM / EXPENSE</label>
-      <input list="expenseItems" id="item" placeholder="Type or select..." oninput="checkTreatingOthers()">
-      <datalist id="expenseItems">
-        <option value="Food"><option value="Data"><option value="Rice"><option value="Butane">
-        <option value="Cabinet"><option value="Table"><option value="Rent"><option value="Haircut">
-        <option value="Commitment"><option value="Contribution"><option value="Entrance Fee">
-        <option value="Tuition Fee"><option value="Water"><option value="Trash Bag"><option value="Soy Sauce">
-        <option value="Vinegar"><option value="Salt"><option value="Sugar"><option value="Coffee">
-        <option value="Milk"><option value="Snacks"><option value="Tithes"><option value="Transpo">
-        <option value="Clothing"><option value="Drinks"><option value="Treating Others"><option value="Other">
-      </datalist>
-    </div>
-    <div class="form-group" id="personGroup" style="display:none;"><label>WHO DID YOU TREAT?</label><input type="text" id="person" placeholder="Example: Maria"></div>
-    <div class="form-group"><label>DESCRIPTION / NOTE</label><input type="text" id="description" placeholder="Optional..."></div>
-    <div class="preview" id="allocationPreview">
-      <div class="preview-title">Cash-In will automatically become:</div>
-      <div class="preview-row"><span id="previewNeedsLabel">Needs — 50%</span><strong id="previewNeeds">₱0.00</strong></div>
-      <div class="preview-row"><span id="previewWantsLabel">Wants — 30%</span><strong id="previewWants">₱0.00</strong></div>
-      <div class="preview-row"><span id="previewSavingsLabel">Savings — 10%</span><strong id="previewSavings">₱0.00</strong></div>
-      <div class="preview-row"><span id="previewTithesLabel">Tithes — 10%</span><strong id="previewTithes">₱0.00</strong></div>
-    </div>
-    <div id="cashOutMessage" class="warning" style="display:none;">Cash Out does not receive the 50/30/10/10 allocation. Choose the category where the actual spending belongs.</div>
-    <button class="btn btn-primary" style="width:100%;" onclick="addTransaction()">ADD TRANSACTION</button>
-  </div>
 </div>
 
-<!-- ADD GOAL MODAL -->
-<div class="goal-modal" id="goalModal">
-  <div class="goal-modal-box">
-    <div class="goal-modal-head"><h2>🎯 Add Financial Goal</h2><button class="close" onclick="closeGoalModal()">×</button></div>
-    <div class="goal-form-group"><label>GOAL NAME</label><input type="text" id="goalName" placeholder="Example: House"></div>
-    <div class="goal-form-group"><label>ICON</label><input type="text" id="goalIcon" class="goal-emoji-input" value="🎯" maxlength="2"></div>
-    <div class="goal-form-group"><label>CATEGORY</label>
-      <select id="goalCategory">
-        <option value="House">🏠 House / Home</option><option value="Church">⛪ Church Commitment</option>
-        <option value="Education">🎓 Education</option><option value="Emergency">🏥 Emergency Fund</option>
-        <option value="Business">💼 Business / Career</option><option value="Vehicle">🚗 Vehicle</option>
-        <option value="Technology">💻 Technology</option><option value="Travel">✈️ Travel</option>
-        <option value="Family">👨‍👩‍👧 Family</option><option value="Wedding">💍 Wedding</option>
-        <option value="Savings">💰 General Savings</option><option value="Custom">✏️ Custom</option>
-      </select>
+<div class="view-switcher">
+
+    <button id="monthViewButton" class="view-button active">
+        Month
+    </button>
+
+    <button id="weekViewButton" class="view-button">
+        Week
+    </button>
+
+    <button id="dayViewButton" class="view-button">
+        Day
+    </button>
+
+    <button id="habitViewButton" class="view-button">
+        🎯 Habits
+    </button>
+
+</div>
+
+
+    <div class="weekdays" id="weekdaysRow">
+
+        <div class="weekday">Sun</div>
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+
     </div>
-    <div class="goal-form-group"><label>TARGET AMOUNT</label><input type="number" id="goalTarget" class="amount-input" min="0" step="0.01" placeholder="0.00"></div>
-    <div class="goal-form-group"><label>CURRENT AMOUNT SAVED</label><input type="number" id="goalSaved" min="0" step="0.01" placeholder="0.00"></div>
-    <div class="goal-form-group"><label>TARGET DATE</label><input type="date" id="goalDate"></div>
-    <div class="goal-form-group"><label>PRIORITY</label>
-      <select id="goalPriority">
-        <option value="Essential">🔴 Essential</option><option value="Important">🟠 Important</option><option value="Nice to Have">🟢 Nice to Have</option>
-      </select>
+
+
+    <div id="calendar" class="calendar"></div>
+
+    <div id="weekCalendar" class="week-calendar" style="display:none;"></div>
+
+    <div id="dayCalendar" class="day-calendar" style="display:none;"></div>
+
+    <div id="habitTracker" class="habit-tracker" style="display:none;"></div>
+
+</div>
+
+
+<!-- RIGHT SIDE -->
+
+<div>
+
+
+<div class="card">
+
+    <button class="add-event" id="addEventButton">
+    ＋ Add Event
+</button>
+
+<button class="smart-schedule" id="smartScheduleButton">
+    ✨ Smart Schedule
+</button>
+
+    <h3 id="Title"></h3>
+
+    <div id="eventList"></div>
+
+</div>
+
+
+<br>
+
+
+<div class="card">
+
+    <h3>🧠 Brain Dump</h3>
+
+    <p style="font-size:12px;color:#627d98;">
+        Save ideas here without turning them into calendar events.
+    </p>
+
+    <textarea
+        id="brainDump"
+        placeholder="New screenplay idea... website idea... something you don't want to forget..."></textarea>
+
+    <button class="save-dump" id="saveBrainDump">
+        Save Brain Dump
+    </button>
+
+    <div id="brainMessage" class="message"></div>
+
+</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- EVENT MODAL -->
+
+<div class="modal" id="eventModal">
+
+<div class="modal-box">
+
+    <div class="modal-header">
+
+        <h2>Add Event</h2>
+
+        <button class="close" id="closeModal">
+            ×
+        </button>
+
     </div>
-    <div class="goal-form-group"><label>NOTE</label><input type="text" id="goalDescription" placeholder="Optional..."></div>
-    <button class="btn btn-primary" style="width:100%;" onclick="addGoal()">ADD GOAL</button>
-  </div>
+
+
+    <form id="eventForm">
+
+        <div class="form-grid">
+
+
+            <div class="form-group full">
+
+                <label>Event Title</label>
+
+                <input
+                    id="eventTitle"
+                    type="text"
+                    placeholder="Example: Write screenplay"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Category</label>
+
+                <select id="eventCategory">
+
+                    <option>Personal</option>
+                    <option>Work</option>
+                    <option>Study</option>
+                    <option>Writing</option>
+                    <option>Coding</option>
+                    <option>Exercise</option>
+                    <option>Social</option>
+                    <option>Chores</option>
+                    <option>Health</option>
+                    <option>Other</option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Priority</label>
+
+                <select id="eventPriority">
+
+                    <option value="must">
+                        🔴 Must Get Done
+                    </option>
+
+                    <option value="could">
+                        🟡 Could Get Done Today
+                    </option>
+
+                    <option value="none" selected>
+                        ⚪ Everything Else
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Start Date</label>
+
+<input
+    id="eventStartDate"
+    type="date"
+    required>
+
+       <div class="form-group">
+
+    <label>End Date</label>
+
+    <input
+        id="eventEndDate"
+        type="date"
+        required>
+
+</div>         
+
+            </div>
+
+
+            <div class="form-group">
+
+    <label>Time</label>
+
+    <select id="timeType">
+
+        <option value="specific">
+            Specific Time
+        </option>
+
+        <option value="morning">
+            🌅 Morning
+        </option>
+
+        <option value="afternoon">
+            ☀️ Afternoon
+        </option>
+
+        <option value="evening">
+            🌆 Evening
+        </option>
+
+        <option value="night">
+            🌙 Night
+        </option>
+
+        <option value="flexible">
+            🧠 Flexible / Anytime
+        </option>
+
+        <option value="all-day">
+            📅 All Day
+        </option>
+
+    </select>
+
+</div>
+
+
+<div
+    class="form-group"
+    id="specificTimeGroup">
+
+    <label>Start Time</label>
+
+    <input
+        id="eventStart"
+        type="time">
+
+</div>
+
+
+<div
+    class="form-group"
+    id="endTimeGroup">
+
+    <label>End Time</label>
+
+    <input
+        id="eventEnd"
+        type="time">
+
+</div>
+
+
+            <div class="form-group full">
+
+                <label>Description</label>
+
+                <textarea
+                    id="eventDescription"
+                    placeholder="Notes, location, details..."></textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+    <label>Repeat</label>
+
+    <select id="eventRepeat">
+
+        <option value="none">
+            Does not repeat
+        </option>
+
+        <option value="daily">
+            Every day
+        </option>
+
+        <option value="weekly">
+            Every week
+        </option>
+
+        <option value="monthly">
+            Every month
+        </option>
+
+        <option value="custom">
+            Custom
+        </option>
+
+    </select>
+
+</div>
+
+            <!-- CUSTOM REPEAT OPTIONS -->
+
+<div
+    class="form-group full"
+    id="customRepeatGroup"
+    style="display:none;">
+
+    <label>Repeat On</label>
+
+    <div class="day-selector">
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="0"
+                class="repeat-day">
+            Sun
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="1"
+                class="repeat-day">
+            Mon
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="2"
+                class="repeat-day">
+            Tue
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="3"
+                class="repeat-day">
+            Wed
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="4"
+                class="repeat-day">
+            Thu
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="5"
+                class="repeat-day">
+            Fri
+        </label>
+
+        <label class="day-option">
+            <input
+                type="checkbox"
+                value="6"
+                class="repeat-day">
+            Sat
+        </label>
+
+    </div>
+
+
+    <label style="margin-top:15px;">
+        Ends
+    </label>
+
+    <select id="repeatEndType">
+
+        <option value="never">
+            Never
+        </option>
+
+        <option value="date">
+            On a specific date
+        </option>
+
+        <option value="occurrences">
+            After a number of occurrences
+        </option>
+
+    </select>
+
+
+    <div
+        id="repeatEndDateGroup"
+        style="display:none; margin-top:10px;">
+
+        <label>
+            End Date
+        </label>
+
+        <input
+            id="repeatEndDate"
+            type="date">
+
+    </div>
+
+
+    <div
+        id="repeatOccurrencesGroup"
+        style="display:none; margin-top:10px;">
+
+        <label>
+            Number of Occurrences
+        </label>
+
+        <input
+            id="repeatOccurrences"
+            type="number"
+            min="1"
+            placeholder="Example: 10">
+
+    </div>
+
+</div>
+
+            <div class="form-group">
+
+                <label>Alarm</label>
+
+                <select id="alarmType">
+
+                    <option value="none">
+                        No alarm
+                    </option>
+
+                    <option value="default">
+                        Default alarm
+                    </option>
+
+                    <option value="custom">
+                        Upload music/audio
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                class="form-group full"
+                id="audioGroup"
+                style="display:none;">
+
+                <label>Upload Alarm Music</label>
+
+                <input
+                    id="audioFile"
+                    type="file"
+                    accept="audio/*">
+
+                <audio
+                    id="audioPreview"
+                    class="audio-preview"
+                    controls
+                    style="display:none;">
+                </audio>
+
+            </div>
+
+
+        </div>
+
+
+        <button
+            class="save-event"
+            type="submit">
+
+            Save Event
+
+        </button>
+
+    </form>
+
+</div>
+
+</div>
+
+<!-- SMART SCHEDULE MODAL -->
+
+<div class="modal" id="smartModal">
+
+    <div class="modal-box">
+
+        <div class="modal-header">
+
+            <h2>✨ Smart Schedule</h2>
+
+            <button class="close" id="closeSmartModal">
+                ×
+            </button>
+
+        </div>
+
+        <p style="font-size:13px;color:#627d98;">
+            Tell MindCal what you need to do, and it will find
+            an available time around your existing events.
+        </p>
+
+        <div class="form-group">
+
+            <label>What do you need to do?</label>
+
+            <input
+                id="smartTitle"
+                type="text"
+                placeholder="Example: Study for exam"
+                required>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Duration</label>
+
+            <select id="smartDuration">
+
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1 hour 30 minutes</option>
+                <option value="120">2 hours</option>
+                <option value="180">3 hours</option>
+                <option value="240">4 hours</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Priority</label>
+
+            <select id="smartPriority">
+
+                <option value="must">
+                    🔴 Must Get Done
+                </option>
+
+                <option value="could">
+                    🟡 Could Get Done Today
+                </option>
+
+                <option value="none" selected>
+                    ⚪ Everything Else
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Preferred Date</label>
+
+            <input
+                id="smartDate"
+                type="date">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Preferred Time</label>
+
+            <select id="smartPreference">
+
+                <option value="any">
+                    🧠 Any available time
+                </option>
+
+                <option value="morning">
+                    🌅 Morning
+                </option>
+
+                <option value="afternoon">
+                    ☀️ Afternoon
+                </option>
+
+                <option value="evening">
+                    🌆 Evening
+                </option>
+
+                <option value="night">
+                    🌙 Night
+                </option>
+
+            </select>
+
+        </div>
+
+        <button
+            class="save-event"
+            id="findSmartTime">
+
+            ✨ Find Best Time
+
+        </button>
+
+        <div
+            id="smartResult"
+            style="
+                margin-top:15px;
+                font-size:13px;
+            ">
+        </div>
+
+    </div>
+
 </div>
 
 <script>
-/* =========================================================
-   STATE
-   ========================================================= */
-let transactions = [];
-let financialGoals = [];
-let groceries = [];
-let currency = "PHP";
-let currentType = "income";
-let chartMode = "30days";
 
-const expenseItems = ["Food","Data","Rice","Butane","Cabinet","Table","Rent","Haircut","Commitment",
-  "Contribution","Entrance Fee","Tuition Fee","Water","Trash Bag","Soy Sauce","Vinegar","Salt","Sugar",
-  "Coffee","Milk","Snacks","Tithes","Transpo","Clothing","Drinks","Treating Others","Other"];
+/* =========================================
+   DATA
+========================================= */
 
-let allocationSettings = {needs:50,wants:30,savings:10,tithes:10};
+let events =
+    JSON.parse(
+        localStorage.getItem("mindcal_events")
+    ) || [];
 
-const currencySettings = {
-  PHP:{locale:"en-PH",symbol:"₱"}, USD:{locale:"en-US",symbol:"$"}, EUR:{locale:"en-DE",symbol:"€"},
-  GBP:{locale:"en-GB",symbol:"£"}, JPY:{locale:"ja-JP",symbol:"¥"}, KRW:{locale:"ko-KR",symbol:"₩"},
-  IDR:{locale:"id-ID",symbol:"Rp"}, AUD:{locale:"en-AU",symbol:"A$"}, CAD:{locale:"en-CA",symbol:"CA$"},
-  SGD:{locale:"en-SG",symbol:"S$"}, KHR:{locale:"km-KH",symbol:"៛"}, MMK:{locale:"my-MM",symbol:"K"}
-};
 
-function money(value){
-  const settings = currencySettings[currency] || currencySettings.PHP;
-  try{
-    return new Intl.NumberFormat(settings.locale,{
-      style:"currency", currency:currency,
-      minimumFractionDigits:(currency==="JPY"||currency==="KRW")?0:2
-    }).format(Number(value)||0);
-  }catch(e){
-    return settings.symbol + (Number(value)||0).toFixed(2);
-  }
+let brainDump =
+    localStorage.getItem(
+        "mindcal_brain_dump"
+    ) || "";
+
+
+let habits =
+    JSON.parse(
+        localStorage.getItem("mindcal_habits")
+    ) || [];
+
+
+let habitLog =
+    JSON.parse(
+        localStorage.getItem("mindcal_habit_log")
+    ) || {};
+
+/* habitLog[habitId] = { "YYYY-MM-DD": true } */
+
+
+let habitMonthDate = new Date();
+
+
+let currentDate = new Date();
+
+let selectedDate = new Date();
+
+let uploadedAudio = null;
+
+
+/* =========================================
+   ELEMENTS
+========================================= */
+
+const calendar =
+    document.getElementById("calendar");
+
+const weekCalendar =
+    document.getElementById("weekCalendar");
+
+const dayCalendar =
+    document.getElementById("dayCalendar");
+
+const habitTracker =
+    document.getElementById("habitTracker");
+
+const weekdaysRow =
+    document.getElementById("weekdaysRow");
+
+const monthViewButton =
+    document.getElementById("monthViewButton");
+
+const weekViewButton =
+    document.getElementById("weekViewButton");
+
+const dayViewButton =
+    document.getElementById("dayViewButton");
+
+const habitViewButton =
+    document.getElementById("habitViewButton");
+
+const modal =
+    document.getElementById("eventModal");
+
+const eventForm =
+    document.getElementById("eventForm");
+    
+const brainDumpBox =
+    document.getElementById("brainDump");
+
+
+brainDumpBox.value = brainDump;
+
+
+/* =========================================
+   DATE FUNCTION
+========================================= */
+
+function getDateKey(date){
+
+    let year =
+        date.getFullYear();
+
+    let month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+    let day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+
 }
 
-/* =========================================================
-   PERSISTENT STORAGE
-   Uses the browser's built-in localStorage.
-   Data survives refreshes and reopening the page.
-   ========================================================= */
 
-function storageGet(key, fallback){
-  try{
-    const value = localStorage.getItem("myMoney_" + key);
-    return value !== null ? JSON.parse(value) : fallback;
-  }catch(e){
-    console.error("Storage load failed for", key, e);
-    return fallback;
-  }
+/* =========================================
+   SAVE DATA
+========================================= */
+
+function saveEvents(){
+
+    localStorage.setItem(
+        "mindcal_events",
+        JSON.stringify(events)
+    );
+
 }
 
-function storageSet(key, value){
-  try{
-    localStorage.setItem("myMoney_" + key, JSON.stringify(value));
-  }catch(e){
-    console.error("Storage save failed for", key, e);
-  }
+function saveHabits(){
+
+    localStorage.setItem(
+        "mindcal_habits",
+        JSON.stringify(habits)
+    );
+
 }
 
-function loadAll(){
-  transactions = storageGet("transactions", []);
-  financialGoals = storageGet("goals", []);
-  groceries = storageGet("groceries", []);
-  currency = storageGet("currency", "PHP");
+function saveHabitLog(){
 
-  allocationSettings = storageGet(
-    "allocationSettings",
-    {
-      needs:50,
-      wants:30,
-      savings:10,
-      tithes:10
+    localStorage.setItem(
+        "mindcal_habit_log",
+        JSON.stringify(habitLog)
+    );
+
+}
+
+function getCustomRepeatSettings(){
+
+    const days = [];
+
+    document
+    .querySelectorAll(".repeat-day:checked")
+    .forEach(function(checkbox){
+
+        days.push(
+            Number(checkbox.value)
+        );
+
+    });
+
+
+    return {
+
+        days: days,
+
+        endType:
+            document.getElementById(
+                "repeatEndType"
+            ).value,
+
+        endDate:
+            document.getElementById(
+                "repeatEndDate"
+            ).value,
+
+        occurrences:
+            document.getElementById(
+                "repeatOccurrences"
+            ).value
+
+    };
+
+}
+
+
+/* =========================================
+   RENDER CALENDAR
+========================================= */
+
+function renderCalendar(){
+
+    calendar.innerHTML = "";
+
+    const year =
+        currentDate.getFullYear();
+
+    const month =
+        currentDate.getMonth();
+
+
+    document.getElementById(
+        "monthTitle"
+    ).textContent =
+        currentDate.toLocaleDateString(
+            undefined,
+            {
+                month:"long",
+                year:"numeric"
+            }
+        );
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        ).getDay();
+
+
+    const days =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    for(
+        let i = 0;
+        i < 42;
+        i++
+    ){
+
+        const number =
+            i - firstDay + 1;
+
+
+        const cellDate =
+            new Date(
+                year,
+                month,
+                number
+            );
+
+
+        const cell =
+            document.createElement("div");
+
+
+        cell.className = "day";
+
+
+        const key =
+            getDateKey(cellDate);
+
+
+        cell.dataset.date =
+            key;
+
+
+        if(
+            key ===
+            getDateKey(new Date())
+        ){
+
+            cell.classList.add("today");
+
+        }
+
+
+        if(
+    key ===
+    getDateKey(selectedDate)
+){
+
+    cell.classList.add("selected");
+
+}
+
+
+        const numberElement =
+            document.createElement("div");
+
+
+        numberElement.className =
+            "day-number";
+
+
+        numberElement.textContent =
+            cellDate.getDate();
+
+
+        cell.appendChild(
+            numberElement
+        );
+
+
+        const dayEvents =
+            getEventsForDate(key);
+
+        dayEvents.sort(function(a,b){
+            return getPriorityRank(a) - getPriorityRank(b);
+        });
+
+
+        dayEvents
+        .slice(0,4)
+        .forEach(function(event){
+
+            const eventElement =
+                document.createElement("div");
+
+
+            eventElement.className =
+                "event priority-" +
+                (event.priority || "none");
+
+
+            if(
+                event.status ===
+                "completed"
+            ){
+
+                eventElement.classList.add(
+                    "completed"
+                );
+
+            }
+
+
+            if(
+                event.status ===
+                "cancelled"
+            ){
+
+                eventElement.classList.add(
+                    "cancelled"
+                );
+
+            }
+
+
+            let displayTime = "";
+
+if(event.timeType === "morning"){
+    displayTime = "🌅 ";
+}
+
+else if(event.timeType === "afternoon"){
+    displayTime = "☀️ ";
+}
+
+else if(event.timeType === "evening"){
+    displayTime = "🌆 ";
+}
+
+else if(event.timeType === "night"){
+    displayTime = "🌙 ";
+}
+
+else if(event.timeType === "flexible"){
+    displayTime = "🧠 ";
+}
+
+else if(event.timeType === "all-day"){
+    displayTime = "📅 ";
+}
+
+else if(event.start){
+    displayTime = event.start + " ";
+}
+
+
+eventElement.textContent =
+    displayTime + event.title;
+
+
+            cell.appendChild(
+                eventElement
+            );
+
+        });
+
+
+        cell.addEventListener(
+            "pointerdown",
+            function(e){
+
+                startDateDrag(key);
+
+            }
+        );
+
+
+        calendar.appendChild(cell);
+
     }
-  );
+
 }
 
-function saveData(){
-  storageSet("transactions", transactions);
+/* =========================================
+   RENDER WEEKLY CALENDAR
+========================================= */
+
+function getStartOfWeek(date){
+
+    const result = new Date(date);
+
+    const day = result.getDay();
+
+    // Monday = 0
+    const difference = day === 0 ? -6 : 1 - day;
+
+    result.setDate(
+        result.getDate() + difference
+    );
+
+    result.setHours(0,0,0,0);
+
+    return result;
 }
 
-function saveGoals(){
-  storageSet("goals", financialGoals);
+
+function renderWeekCalendar(){
+
+    const weekCalendar =
+        document.getElementById("weekCalendar");
+
+    weekCalendar.innerHTML = "";
+
+    const weekStart =
+        getStartOfWeek(selectedDate);
+
+
+    /* TIME COLUMN HEADER */
+
+    const emptyHeader =
+        document.createElement("div");
+
+    emptyHeader.className =
+        "week-day-header";
+
+    emptyHeader.textContent =
+        "";
+
+    weekCalendar.appendChild(
+        emptyHeader
+    );
+
+
+    /* MONDAY → SUNDAY HEADERS */
+
+    for(let i = 0; i < 7; i++){
+
+        const date =
+            new Date(weekStart);
+
+        date.setDate(
+            weekStart.getDate() + i
+        );
+
+
+        const header =
+            document.createElement("div");
+
+        header.className =
+            "week-day-header";
+
+
+        header.innerHTML = `
+            ${date.toLocaleDateString(
+                undefined,
+                { weekday:"short" }
+            )}
+            <br>
+            ${date.getDate()}
+        `;
+
+
+        weekCalendar.appendChild(
+            header
+        );
+
+    }
+
+
+    /* =====================================
+       DEDICATED SECTIONS
+       (All Day, Anytime, Morning,
+       Afternoon, Evening, Night)
+    ===================================== */
+
+    const sectionGroups = [
+
+        { key:"morning",  label:"🌅 Morning" },
+        { key:"afternoon",label:"☀️ Afternoon" },
+        { key:"evening",  label:"🌆 Evening" },
+        { key:"night",    label:"🌙 Night" },
+        { key:"flexible", label:"🧠 Anytime" },
+        { key:"all-day",  label:"📅 All Day" }
+
+    ];
+
+
+    const sectionLabel =
+        document.createElement("div");
+
+    sectionLabel.className =
+        "week-time";
+
+    sectionLabel.textContent =
+        "";
+
+    weekCalendar.appendChild(
+        sectionLabel
+    );
+
+
+    for(let day = 0; day < 7; day++){
+
+        const date =
+            new Date(weekStart);
+
+        date.setDate(
+            weekStart.getDate() + day
+        );
+
+
+        const dateKey =
+            getDateKey(date);
+
+
+        const dayEvents =
+            getEventsForDate(dateKey);
+
+
+        const sectionCell =
+            document.createElement("div");
+
+        sectionCell.className =
+            "week-section-cell";
+
+
+        sectionGroups.forEach(
+            function(group){
+
+                const groupEvents =
+                    dayEvents.filter(
+                        function(event){
+
+                            return event.timeType ===
+                                group.key;
+
+                        }
+                    );
+
+
+                if(groupEvents.length === 0){
+
+                    return;
+
+                }
+
+
+                groupEvents.sort(
+                    function(a,b){
+
+                        return getPriorityRank(a) -
+                            getPriorityRank(b);
+
+                    }
+                );
+
+
+                const groupBox =
+                    document.createElement("div");
+
+                groupBox.className =
+                    "week-section-group";
+
+
+                const groupLabel =
+                    document.createElement("div");
+
+                groupLabel.className =
+                    "week-section-label";
+
+                groupLabel.textContent =
+                    group.label;
+
+                groupBox.appendChild(
+                    groupLabel
+                );
+
+
+                groupEvents.forEach(
+                    function(event){
+
+                        const item =
+                            document.createElement("div");
+
+                        item.className =
+                            "week-event priority-" +
+                            (event.priority || "none");
+
+
+                        if(
+                            event.status ===
+                            "completed"
+                        ){
+
+                            item.classList.add(
+                                "completed"
+                            );
+
+                        }
+
+
+                        if(
+                            event.status ===
+                            "cancelled"
+                        ){
+
+                            item.classList.add(
+                                "cancelled"
+                            );
+
+                        }
+
+
+                        item.textContent =
+                            event.title;
+
+                        groupBox.appendChild(
+                            item
+                        );
+
+                    }
+                );
+
+
+                sectionCell.appendChild(
+                    groupBox
+                );
+
+            }
+        );
+
+
+        sectionCell.addEventListener(
+            "click",
+            function(){
+
+                selectedDate =
+                    new Date(date);
+
+                renderCalendar();
+
+                renderEvents();
+
+                renderWeekCalendar();
+                renderDayCalendar();
+
+            }
+        );
+
+
+        weekCalendar.appendChild(
+            sectionCell
+        );
+
+    }
+
+
+    /* TIMED EVENTS DIVIDER */
+
+    const timedDivider =
+        document.createElement("div");
+
+    timedDivider.className =
+        "week-timed-divider";
+
+    timedDivider.textContent =
+        "🕐 Timed Events";
+
+    weekCalendar.appendChild(
+        timedDivider
+    );
+
+
+    /* HOURS */
+
+    for(let hour = 0; hour < 24; hour++){
+
+        /* TIME LABEL */
+
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "week-time";
+
+        const displayHour =
+            hour === 0
+                ? 12
+                : hour > 12
+                    ? hour - 12
+                    : hour;
+
+        const period =
+            hour < 12 ? "AM" : "PM";
+
+        time.textContent =
+            `${displayHour} ${period}`;
+
+
+        weekCalendar.appendChild(
+            time
+        );
+
+
+        /* MONDAY → SUNDAY CELLS */
+
+        for(let day = 0; day < 7; day++){
+
+            const date =
+                new Date(weekStart);
+
+            date.setDate(
+                weekStart.getDate() + day
+            );
+
+
+            const cell =
+                document.createElement("div");
+
+            cell.className =
+                "week-cell";
+
+
+            const dateKey =
+                getDateKey(date);
+
+
+            cell.dataset.date =
+                dateKey;
+
+            cell.dataset.hour =
+                hour;
+
+
+            /* EVENTS FOR THIS DAY */
+
+            const dayEvents =
+                getEventsForDate(dateKey);
+
+
+            dayEvents.forEach(
+                function(event){
+
+                    /*
+                       Only show specific-time
+                       events in the hourly grid —
+                       Morning/Afternoon/Evening/
+                       Night/Anytime/All Day events
+                       live in their own dedicated
+                       sections above.
+                    */
+
+                    if(
+                        event.timeType !== "specific" ||
+                        !event.start
+                    ){
+
+                        return;
+
+                    }
+
+
+                    const eventHour =
+                        Number(
+                            event.start
+                                .split(":")[0]
+                        );
+
+
+                    if(eventHour !== hour){
+
+                        return;
+
+                    }
+
+
+                    const eventElement =
+                        document.createElement(
+                            "div"
+                        );
+
+                    eventElement.className =
+                        "week-event priority-" +
+                        (event.priority || "none");
+
+
+                    if(
+                        event.status ===
+                        "completed"
+                    ){
+
+                        eventElement.classList.add(
+                            "completed"
+                        );
+
+                    }
+
+
+                    if(
+                        event.status ===
+                        "cancelled"
+                    ){
+
+                        eventElement.classList.add(
+                            "cancelled"
+                        );
+
+                    }
+
+
+                    eventElement.textContent =
+                        event.title;
+
+
+                    cell.appendChild(
+                        eventElement
+                    );
+
+                }
+            );
+
+
+            /* CLICK / DRAG HOUR */
+
+            cell.addEventListener(
+                "pointerdown",
+                function(e){
+
+                    startHourDrag(
+                        dateKey,
+                        hour,
+                        false
+                    );
+
+                }
+            );
+
+
+            weekCalendar.appendChild(
+                cell
+            );
+
+        }
+
+    }
+
 }
 
-function saveGroceries(){
-  storageSet("groceries", groceries);
+/* =========================================
+   RENDER DAILY VIEW
+========================================= */
+
+function renderDayCalendar(){
+
+    const dayCalendar =
+        document.getElementById("dayCalendar");
+
+    dayCalendar.innerHTML = "";
+
+    const dateKey =
+        getDateKey(selectedDate);
+
+    const dayEvents =
+        getEventsForDate(dateKey);
+
+
+    /* HEADER ROW */
+
+    const emptyHeader =
+        document.createElement("div");
+
+    emptyHeader.className =
+        "week-day-header";
+
+    emptyHeader.textContent =
+        "";
+
+    dayCalendar.appendChild(
+        emptyHeader
+    );
+
+
+    const header =
+        document.createElement("div");
+
+    header.className =
+        "week-day-header";
+
+    header.textContent =
+        selectedDate.toLocaleDateString(
+            undefined,
+            {
+                weekday:"long",
+                month:"long",
+                day:"numeric"
+            }
+        );
+
+    dayCalendar.appendChild(
+        header
+    );
+
+
+    /* =====================================
+       DEDICATED SECTIONS
+       (Morning, Afternoon, Evening,
+       Night, Anytime, All Day)
+    ===================================== */
+
+    const sectionGroups = [
+
+        { key:"morning",  label:"🌅 Morning" },
+        { key:"afternoon",label:"☀️ Afternoon" },
+        { key:"evening",  label:"🌆 Evening" },
+        { key:"night",    label:"🌙 Night" },
+        { key:"flexible", label:"🧠 Anytime" },
+        { key:"all-day",  label:"📅 All Day" }
+
+    ];
+
+
+    const sectionLabel =
+        document.createElement("div");
+
+    sectionLabel.className =
+        "week-time";
+
+    sectionLabel.textContent =
+        "";
+
+    dayCalendar.appendChild(
+        sectionLabel
+    );
+
+
+    const sectionCell =
+        document.createElement("div");
+
+    sectionCell.className =
+        "week-section-cell";
+
+
+    sectionGroups.forEach(
+        function(group){
+
+            const groupEvents =
+                dayEvents.filter(
+                    function(event){
+
+                        return event.timeType ===
+                            group.key;
+
+                    }
+                );
+
+
+            if(groupEvents.length === 0){
+
+                return;
+
+            }
+
+
+            groupEvents.sort(
+                function(a,b){
+
+                    return getPriorityRank(a) -
+                        getPriorityRank(b);
+
+                }
+            );
+
+
+            const groupBox =
+                document.createElement("div");
+
+            groupBox.className =
+                "week-section-group";
+
+
+            const groupLabel =
+                document.createElement("div");
+
+            groupLabel.className =
+                "week-section-label";
+
+            groupLabel.textContent =
+                group.label;
+
+            groupBox.appendChild(
+                groupLabel
+            );
+
+
+            groupEvents.forEach(
+                function(event){
+
+                    const item =
+                        document.createElement("div");
+
+                    item.className =
+                        "week-event priority-" +
+                        (event.priority || "none");
+
+
+                    if(
+                        event.status ===
+                        "completed"
+                    ){
+
+                        item.classList.add(
+                            "completed"
+                        );
+
+                    }
+
+
+                    if(
+                        event.status ===
+                        "cancelled"
+                    ){
+
+                        item.classList.add(
+                            "cancelled"
+                        );
+
+                    }
+
+
+                    item.textContent =
+                        event.title;
+
+                    groupBox.appendChild(
+                        item
+                    );
+
+                }
+            );
+
+
+            sectionCell.appendChild(
+                groupBox
+            );
+
+        }
+    );
+
+
+    dayCalendar.appendChild(
+        sectionCell
+    );
+
+
+    /* TIMED EVENTS DIVIDER */
+
+    const timedDivider =
+        document.createElement("div");
+
+    timedDivider.className =
+        "week-timed-divider";
+
+    timedDivider.textContent =
+        "🕐 Timed Events";
+
+    dayCalendar.appendChild(
+        timedDivider
+    );
+
+
+    /* HOURS */
+
+    for(let hour = 0; hour < 24; hour++){
+
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "week-time";
+
+        const displayHour =
+            hour === 0
+                ? 12
+                : hour > 12
+                    ? hour - 12
+                    : hour;
+
+        const period =
+            hour < 12 ? "AM" : "PM";
+
+        time.textContent =
+            `${displayHour} ${period}`;
+
+        dayCalendar.appendChild(
+            time
+        );
+
+
+        const cell =
+            document.createElement("div");
+
+        cell.className =
+            "week-cell";
+
+        cell.dataset.date =
+            dateKey;
+
+        cell.dataset.hour =
+            hour;
+
+
+        dayEvents.forEach(
+            function(event){
+
+                /*
+                   Only show specific-time
+                   events in the hourly grid.
+                */
+
+                if(
+                    event.timeType !== "specific" ||
+                    !event.start
+                ){
+
+                    return;
+
+                }
+
+
+                const eventHour =
+                    Number(
+                        event.start
+                            .split(":")[0]
+                    );
+
+
+                if(eventHour !== hour){
+
+                    return;
+
+                }
+
+
+                const eventElement =
+                    document.createElement("div");
+
+                eventElement.className =
+                    "week-event priority-" +
+                    (event.priority || "none");
+
+
+                if(
+                    event.status ===
+                    "completed"
+                ){
+
+                    eventElement.classList.add(
+                        "completed"
+                    );
+
+                }
+
+
+                if(
+                    event.status ===
+                    "cancelled"
+                ){
+
+                    eventElement.classList.add(
+                        "cancelled"
+                    );
+
+                }
+
+
+                let label =
+                    event.start;
+
+                if(event.end){
+
+                    label +=
+                        " – " +
+                        event.end;
+
+                }
+
+                eventElement.textContent =
+                    label +
+                    " " +
+                    event.title;
+
+                cell.appendChild(
+                    eventElement
+                );
+
+            }
+        );
+
+
+        cell.addEventListener(
+            "pointerdown",
+            function(e){
+
+                startHourDrag(
+                    dateKey,
+                    hour,
+                    true
+                );
+
+            }
+        );
+
+
+        dayCalendar.appendChild(
+            cell
+        );
+
+    }
+
 }
 
-function saveCurrency(){
-  storageSet("currency", currency);
+/* =========================================
+   RENDER HABIT TRACKER
+========================================= */
+
+function renderHabitTracker(){
+
+    habitTracker.innerHTML = "";
+
+
+    document.getElementById(
+        "monthTitle"
+    ).textContent =
+        habitMonthDate.toLocaleDateString(
+            undefined,
+            {
+                month:"long",
+                year:"numeric"
+            }
+        );
+
+
+    /* ADD HABIT ROW */
+
+    const addRow =
+        document.createElement("div");
+
+    addRow.className =
+        "habit-add-row";
+
+    addRow.innerHTML = `
+
+        <input
+            type="text"
+            id="newHabitName"
+            placeholder="New habit, e.g. Gym">
+
+        <select id="newHabitEmoji">
+            <option value="✅">✅ Generic</option>
+            <option value="💪">💪 Fitness</option>
+            <option value="📖">📖 Reading</option>
+            <option value="🧘">🧘 Mindfulness</option>
+            <option value="💧">💧 Water</option>
+            <option value="🚭">🚭 Quit habit</option>
+            <option value="🥗">🥗 Nutrition</option>
+            <option value="😴">😴 Sleep</option>
+            <option value="✍️">✍️ Journaling</option>
+            <option value="🎯">🎯 Goal</option>
+        </select>
+
+        <button id="addHabitButton">
+            + Add Habit
+        </button>
+
+    `;
+
+    habitTracker.appendChild(
+        addRow
+    );
+
+
+    document
+    .getElementById("addHabitButton")
+    .addEventListener(
+        "click",
+        function(){
+
+            const nameInput =
+                document.getElementById(
+                    "newHabitName"
+                );
+
+            const emojiInput =
+                document.getElementById(
+                    "newHabitEmoji"
+                );
+
+            const name =
+                nameInput.value.trim();
+
+            if(!name){
+
+                alert(
+                    "Please name your habit."
+                );
+
+                return;
+
+            }
+
+            habits.push({
+
+                id:
+                    Date.now().toString(),
+
+                name:
+                    name,
+
+                emoji:
+                    emojiInput.value
+
+            });
+
+            saveHabits();
+
+            renderHabitTracker();
+
+        }
+    );
+
+
+    if(habits.length === 0){
+
+        const empty =
+            document.createElement("div");
+
+        empty.className =
+            "habit-empty";
+
+        empty.textContent =
+            "No habits yet — add one above to start tracking.";
+
+        habitTracker.appendChild(
+            empty
+        );
+
+        return;
+
+    }
+
+
+    const year =
+        habitMonthDate.getFullYear();
+
+    const month =
+        habitMonthDate.getMonth();
+
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    /* HABIT × DAY GRID */
+
+    const table =
+        document.createElement("table");
+
+    table.className =
+        "habit-table";
+
+
+    const thead =
+        document.createElement("thead");
+
+    const headRow =
+        document.createElement("tr");
+
+    const cornerTh =
+        document.createElement("th");
+
+    cornerTh.className =
+        "habit-name-cell";
+
+    cornerTh.textContent =
+        "Habit";
+
+    headRow.appendChild(
+        cornerTh
+    );
+
+
+    for(
+        let day = 1;
+        day <= daysInMonth;
+        day++
+    ){
+
+        const th =
+            document.createElement("th");
+
+        th.textContent =
+            day;
+
+        headRow.appendChild(
+            th
+        );
+
+    }
+
+    thead.appendChild(
+        headRow
+    );
+
+    table.appendChild(
+        thead
+    );
+
+
+    const tbody =
+        document.createElement("tbody");
+
+
+    habits.forEach(
+        function(habit){
+
+            const row =
+                document.createElement("tr");
+
+
+            const nameCell =
+                document.createElement("td");
+
+            nameCell.className =
+                "habit-name-cell";
+
+            nameCell.innerHTML =
+                escapeHTML(habit.emoji) +
+                " " +
+                escapeHTML(habit.name);
+
+
+            const deleteBtn =
+                document.createElement("button");
+
+            deleteBtn.className =
+                "habit-delete";
+
+            deleteBtn.textContent =
+                "✕";
+
+            deleteBtn.addEventListener(
+                "click",
+                function(){
+
+                    if(
+                        confirm(
+                            "Delete habit \"" +
+                            habit.name +
+                            "\"? This also removes its history."
+                        )
+                    ){
+
+                        habits =
+                            habits.filter(
+                                function(h){
+                                    return h.id !== habit.id;
+                                }
+                            );
+
+                        delete habitLog[habit.id];
+
+                        saveHabits();
+                        saveHabitLog();
+
+                        renderHabitTracker();
+
+                    }
+
+                }
+            );
+
+            nameCell.appendChild(
+                deleteBtn
+            );
+
+            row.appendChild(
+                nameCell
+            );
+
+
+            for(
+                let day = 1;
+                day <= daysInMonth;
+                day++
+            ){
+
+                const dateKey =
+                    getDateKey(
+                        new Date(year, month, day)
+                    );
+
+                const cell =
+                    document.createElement("td");
+
+                const check =
+                    document.createElement("div");
+
+                check.className =
+                    "habit-check";
+
+
+                const isDone =
+                    !!(
+                        habitLog[habit.id] &&
+                        habitLog[habit.id][dateKey]
+                    );
+
+                if(isDone){
+
+                    check.classList.add(
+                        "done"
+                    );
+
+                    check.textContent =
+                        "✓";
+
+                }
+
+
+                check.addEventListener(
+                    "click",
+                    function(){
+
+                        if(!habitLog[habit.id]){
+
+                            habitLog[habit.id] = {};
+
+                        }
+
+                        habitLog[habit.id][dateKey] =
+                            !habitLog[habit.id][dateKey];
+
+                        saveHabitLog();
+
+                        renderHabitTracker();
+
+                    }
+                );
+
+
+                cell.appendChild(
+                    check
+                );
+
+                row.appendChild(
+                    cell
+                );
+
+            }
+
+            tbody.appendChild(
+                row
+            );
+
+        }
+    );
+
+    table.appendChild(
+        tbody
+    );
+
+    habitTracker.appendChild(
+        table
+    );
+
+
+    /* DAILY PROGRESS CHART */
+
+    const progressSection =
+        document.createElement("div");
+
+    progressSection.className =
+        "habit-progress-section";
+
+    const progressTitle =
+        document.createElement("div");
+
+    progressTitle.className =
+        "habit-progress-title";
+
+    progressTitle.textContent =
+        "📊 Daily Progress";
+
+    progressSection.appendChild(
+        progressTitle
+    );
+
+
+    const chart =
+        document.createElement("div");
+
+    chart.className =
+        "habit-progress-chart";
+
+
+    for(
+        let day = 1;
+        day <= daysInMonth;
+        day++
+    ){
+
+        const dateKey =
+            getDateKey(
+                new Date(year, month, day)
+            );
+
+        let doneCount = 0;
+
+        habits.forEach(
+            function(habit){
+
+                if(
+                    habitLog[habit.id] &&
+                    habitLog[habit.id][dateKey]
+                ){
+
+                    doneCount++;
+
+                }
+
+            }
+        );
+
+        const percent =
+            habits.length
+            ? Math.round(
+                (doneCount / habits.length) * 100
+              )
+            : 0;
+
+        const bar =
+            document.createElement("div");
+
+        bar.className =
+            "habit-progress-bar";
+
+        bar.style.height =
+            Math.max(percent, 2) + "%";
+
+        bar.title =
+            "Day " + day + ": " + percent + "%";
+
+        chart.appendChild(
+            bar
+        );
+
+    }
+
+    progressSection.appendChild(
+        chart
+    );
+
+    habitTracker.appendChild(
+        progressSection
+    );
+
 }
 
-function saveAllocationSettings(){
-  storageSet("allocationSettings", allocationSettings);
+/* =========================================
+   GET EVENTS
+========================================= */
+
+function getEventsForDate(date){
+
+    return events.filter(function(event){
+
+        const current =
+            new Date(date + "T00:00:00");
+
+        const start =
+            new Date(
+                event.startDate + "T00:00:00"
+            );
+
+        const end =
+            new Date(
+                (event.endDate || event.startDate) +
+                "T00:00:00"
+            );
+
+
+        /* =========================
+           ORIGINAL EVENT DATE RANGE
+        ========================= */
+
+        if(
+            current >= start &&
+            current <= end
+        ){
+
+            return true;
+
+        }
+
+
+        /* =========================
+           NO REPEAT
+        ========================= */
+
+        if(event.repeat === "none"){
+
+            return false;
+
+        }
+
+
+        /* =========================
+           BEFORE START DATE
+        ========================= */
+
+        if(current < start){
+
+            return false;
+
+        }
+
+
+        /* =========================
+           DAILY
+        ========================= */
+
+        if(event.repeat === "daily"){
+
+            return true;
+
+        }
+
+
+        /* =========================
+           WEEKLY
+        ========================= */
+
+        if(event.repeat === "weekly"){
+
+            const difference =
+                Math.floor(
+                    (current - start) / 86400000
+                );
+
+            return difference % 7 === 0;
+
+        }
+
+
+        /* =========================
+           MONTHLY
+        ========================= */
+
+        if(event.repeat === "monthly"){
+
+            return (
+                current.getDate() ===
+                start.getDate()
+            );
+
+        }
+
+
+        /* =========================
+           CUSTOM
+        ========================= */
+
+        if(event.repeat === "custom"){
+
+            if(!event.customRepeat){
+                return false;
+            }
+
+            const settings =
+                event.customRepeat;
+
+
+            /* Check  weekday */
+
+            if(
+                !settings.days ||
+                !settings.days.includes(
+                    current.getDay()
+                )
+            ){
+
+                return false;
+
+            }
+
+
+            /* =========================
+               END DATE
+            ========================= */
+
+            if(
+                settings.endType === "date" &&
+                settings.endDate
+            ){
+
+                const endDate =
+                    new Date(
+                        settings.endDate +
+                        "T00:00:00"
+                    );
+
+                if(current > endDate){
+                    return false;
+                }
+
+            }
+
+
+            /* =========================
+               OCCURRENCES
+            ========================= */
+
+            if(
+                settings.endType ===
+                "occurrences" &&
+                settings.occurrences
+            ){
+
+                const occurrences =
+                    Number(
+                        settings.occurrences
+                    );
+
+                let count = 0;
+
+                const temp =
+                    new Date(start);
+
+                while(temp <= current){
+
+                    if(
+                        settings.days.includes(
+                            temp.getDay()
+                        )
+                    ){
+
+                        count++;
+
+                    }
+
+                    temp.setDate(
+                        temp.getDate() + 1
+                    );
+
+                }
+
+                if(count > occurrences){
+                    return false;
+                }
+
+            }
+
+
+            return true;
+
+        }
+
+
+        return false;
+
+    });
+
 }
 
-function changeCurrency(value){
-  currency = value;
-  saveCurrency();
-  render();
+
+/* =========================================
+   RENDER EVENT LIST
+========================================= */
+
+/* =========================================
+   PRIORITY HELPERS
+========================================= */
+
+function getPriorityRank(event){
+
+    if(event.priority === "must"){
+        return 0;
+    }
+
+    if(event.priority === "could"){
+        return 1;
+    }
+
+    return 2;
+
 }
 
-/* =========================================================
-   TRANSACTION MODAL
-   ========================================================= */
+
+function getPriorityLabel(priority){
+
+    if(priority === "must"){
+        return "🔴 Must Get Done";
+    }
+
+    if(priority === "could"){
+        return "🟡 Could Get Done Today";
+    }
+
+    return "⚪ Everything Else";
+
+}
+
+
+function renderEvents(){
+
+    const key =
+    getDateKey(selectedDate);
+
+    document.getElementById(
+        "Title"
+    ).textContent =
+        selectedDate.toLocaleDateString(
+            undefined,
+            {
+                weekday:"long",
+                month:"long",
+                day:"numeric",
+                year:"numeric"
+            }
+        );
+
+
+    const list =
+        document.getElementById(
+            "eventList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    const dayEvents =
+        getEventsForDate(key);
+
+
+    /* Automatic prioritization: Must Get Done
+       first, then Could Get Done, then
+       everything else. Ties keep their
+       original relative order. */
+
+    dayEvents.sort(function(a,b){
+
+        return getPriorityRank(a) - getPriorityRank(b);
+
+    });
+
+
+    if(
+        dayEvents.length === 0
+    ){
+
+        list.innerHTML =
+            `<div class="empty">
+                No events scheduled.
+            </div>`;
+
+        return;
+
+    }
+
+
+    dayEvents.forEach(
+        function(event){
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "event-card priority-" +
+                (event.priority || "none");
+
+
+            let time = "";
+
+            if(event.start){
+
+                time += event.start;
+
+            }
+
+            if(event.end){
+
+                time +=
+                    " – " +
+                    event.end;
+
+            }
+
+
+            card.innerHTML = `
+
+                <div class="priority-badge">
+                    ${getPriorityLabel(event.priority)}
+                </div>
+
+                <h4>
+                    ${escapeHTML(event.title)}
+                </h4>
+
+                <div class="event-info">
+
+                    ${escapeHTML(event.category)}
+
+                    ${time ? " · " + time : ""}
+
+                </div>
+
+                ${
+                    event.description
+                    ?
+                    `<div style="
+                        font-size:13px;
+                        margin-bottom:8px;
+                    ">
+                        ${escapeHTML(
+                            event.description
+                        )}
+                    </div>`
+                    :
+                    ""
+                }
+
+
+                <div class="actions">
+
+<button
+    class="edit"
+    data-id="${event.id}"
+    data-action="edit">
+
+    ✏️ Edit
+
+</button>
+
+                    <button
+                        class="complete"
+                        data-id="${event.id}"
+                        data-action="complete">
+
+                        ✓ Complete
+
+                    </button>
+
+
+                    <button
+                        class="move"
+                        data-id="${event.id}"
+                        data-action="move">
+
+                        ↪ Move
+
+                    </button>
+
+
+                    <button
+                        class="cancel"
+                        data-id="${event.id}"
+                        data-action="cancel">
+
+                        ✕ Cancel
+
+                    </button>
+
+
+                    <button
+                        class="delete"
+                        data-id="${event.id}"
+                        data-action="delete">
+
+                        🗑 Delete
+
+                    </button>
+
+                </div>
+            `;
+
+
+            list.appendChild(card);
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   EVENT BUTTON ACTIONS
+========================================= */
+
+document
+.getElementById("eventList")
+.addEventListener(
+    "click",
+    function(e){
+
+        const button =
+            e.target.closest("button");
+
+
+        if(!button) return;
+
+
+        const id =
+            button.dataset.id;
+
+
+        const action =
+            button.dataset.action;
+
+
+        const event =
+            events.find(
+                function(item){
+                    return item.id === id;
+                }
+            );
+
+
+        if(!event) return;
+
+        if(action === "edit"){
+
+            openEditModal(event);
+
+            return;
+
+        }
+
+        if(
+            action ===
+            "complete"
+        ){
+
+            event.status =
+                "completed";
+
+        }
+
+
+        if(
+            action ===
+            "cancel"
+        ){
+
+            event.status =
+                "cancelled";
+
+        }
+
+
+        if(
+            action ===
+            "delete"
+        ){
+
+            if(
+                confirm(
+                    "Delete this event permanently?"
+                )
+            ){
+
+                events =
+                    events.filter(
+                        function(item){
+                            return item.id !== id;
+                        }
+                    );
+
+            }
+
+        }
+
+
+        if(action === "move"){
+
+            const newDate =
+                prompt(
+                    "Move event to date:\n\nYYYY-MM-DD",
+                    event.startDate
+                );
+
+            if(newDate){
+
+                event.startDate = newDate;
+                event.endDate = newDate;
+
+            }
+
+        }
+
+
+        saveEvents();
+
+        renderCalendar();
+
+        renderEvents();
+
+        renderWeekCalendar();
+        renderDayCalendar();
+
+    }
+);
+
+
+/* =========================================
+   MODAL
+========================================= */
+
 function openModal(){
-  document.getElementById("transactionModal").classList.add("active");
-  document.getElementById("date").value = new Date().toISOString().split("T")[0];
-}
-function closeModal(){ document.getElementById("transactionModal").classList.remove("active"); }
 
-function setTransactionType(type){
-  currentType = type;
-  const inBtn = document.getElementById("cashInBtn");
-  const outBtn = document.getElementById("cashOutBtn");
-  const category = document.getElementById("category");
-  const preview = document.getElementById("allocationPreview");
-  const message = document.getElementById("cashOutMessage");
+    modal.classList.add("show");
 
-  inBtn.className = "type-btn";
-  outBtn.className = "type-btn";
+    document.querySelector(
+        ".modal-header h2"
+    ).textContent =
+        "Add Event";
 
-  if(type === "income"){
-    inBtn.classList.add("type-in-active");
-    category.disabled = true;
-    category.classList.add("disabled-category");
-    preview.style.display = "block";
-    message.style.display = "none";
-  }else{
-    outBtn.classList.add("type-out-active");
-    category.disabled = false;
-    category.classList.remove("disabled-category");
-    preview.style.display = "none";
-    message.style.display = "block";
-  }
-  updatePreview();
-}
+    eventForm.reset();
 
-/* =========================================================
-   ALLOCATION
-   ========================================================= */
-function allocation(amount){
-  return {
-    needs: amount * allocationSettings.needs / 100,
-    wants: amount * allocationSettings.wants / 100,
-    savings: amount * allocationSettings.savings / 100,
-    tithes: amount * allocationSettings.tithes / 100
-  };
-}
+    delete eventForm.dataset.editingId;
 
-function updateAllocationLabels(){
-  document.getElementById("needsPercentLabel").textContent = allocationSettings.needs + "%";
-  document.getElementById("wantsPercentLabel").textContent = allocationSettings.wants + "%";
-  document.getElementById("savingsPercentLabel").textContent = allocationSettings.savings + "%";
-  document.getElementById("tithesPercentLabel").textContent = allocationSettings.tithes + "%";
+    document.getElementById(
+        "eventStartDate"
+    ).value =
+        getDateKey(selectedDate);
 
-  document.getElementById("needsBar").style.width = allocationSettings.needs + "%";
-  document.getElementById("wantsBar").style.width = allocationSettings.wants + "%";
-  document.getElementById("savingsBar").style.width = allocationSettings.savings + "%";
-  document.getElementById("tithesBar").style.width = allocationSettings.tithes + "%";
 
-  document.getElementById("previewNeedsLabel").textContent = "Needs — " + allocationSettings.needs + "%";
-  document.getElementById("previewWantsLabel").textContent = "Wants — " + allocationSettings.wants + "%";
-  document.getElementById("previewSavingsLabel").textContent = "Savings — " + allocationSettings.savings + "%";
-  document.getElementById("previewTithesLabel").textContent = "Tithes — " + allocationSettings.tithes + "%";
+    document.getElementById(
+        "eventEndDate"
+    ).value =
+        getDateKey(selectedDate);
 
-  document.getElementById("needsPercent").value = allocationSettings.needs;
-  document.getElementById("wantsPercent").value = allocationSettings.wants;
-  document.getElementById("savingsPercent").value = allocationSettings.savings;
-  document.getElementById("tithesPercent").value = allocationSettings.tithes;
-}
 
-function updateAllocationSettings(){
-  const needs = Number(document.getElementById("needsPercent").value) || 0;
-  const wants = Number(document.getElementById("wantsPercent").value) || 0;
-  const savings = Number(document.getElementById("savingsPercent").value) || 0;
-  const tithes = Number(document.getElementById("tithesPercent").value) || 0;
-  const total = needs + wants + savings + tithes;
-  const totalDisplay = document.getElementById("allocationTotal");
+    document.getElementById(
+        "customRepeatGroup"
+    ).style.display =
+        "none";
 
-  if(total !== 100){
-    totalDisplay.textContent = "Total: " + total + "% — Must equal 100%";
-    totalDisplay.style.color = "#a8483b";
-    return;
-  }
 
-  allocationSettings = {needs, wants, savings, tithes};
-  saveAllocationSettings();
+    uploadedAudio = null;
 
-  totalDisplay.textContent = "Total: 100% ✓";
-  totalDisplay.style.color = "#4f7659";
+    /* Reset custom audio */
 
-  updateAllocationLabels();
-  render();
-}
+    document.getElementById(
+        "audioGroup"
+    ).style.display =
+        "none";
 
-function updatePreview(){
-  const amount = Number(document.getElementById("amount").value) || 0;
-  const a = allocation(amount);
-  document.getElementById("previewNeeds").textContent = money(a.needs);
-  document.getElementById("previewWants").textContent = money(a.wants);
-  document.getElementById("previewSavings").textContent = money(a.savings);
-  document.getElementById("previewTithes").textContent = money(a.tithes);
-}
 
-function checkTreatingOthers(){
-  const item = document.getElementById("item").value.trim().toLowerCase();
-  document.getElementById("personGroup").style.display = item === "treating others" ? "block" : "none";
-}
+    document.getElementById(
+        "audioPreview"
+    ).style.display =
+        "none";
 
-/* =========================================================
-   ADD TRANSACTION
-   ========================================================= */
-function addTransaction(){
-  const date = document.getElementById("date").value;
-  const amount = Number(document.getElementById("amount").value);
-  const category = document.getElementById("category").value;
-  const item = document.getElementById("item").value.trim();
-  const person = document.getElementById("person").value.trim();
-  const description = document.getElementById("description").value.trim();
 
-  if(!date){ alert("Please enter a date."); return; }
-  if(!amount || amount <= 0){ alert("Please enter a valid amount."); return; }
-  if(!item){ alert("Please select or type an item."); return; }
+    /* Reset time fields */
 
-  let finalDescription = description || item;
-  if(item.toLowerCase() === "treating others" && person){
-    finalDescription = "Treating " + person + (description ? " — " + description : "");
-  }
+    if(
+        typeof updateTimeFields ===
+        "function"
+    ){
 
-  const transaction = {
-    id: "T-" + Date.now() + "-" + Math.random().toString(36).substring(2,8),
-    date, amount, type: currentType,
-    category: currentType === "income" ? "Cash In" : category,
-    item, description: finalDescription
-  };
+        updateTimeFields();
 
-  transactions.push(transaction);
-  saveData();
-  resetForm();
-  closeModal();
-  render();
-}
-
-function resetForm(){
-  document.getElementById("amount").value = "";
-  document.getElementById("item").value = "";
-  document.getElementById("person").value = "";
-  document.getElementById("description").value = "";
-  document.getElementById("category").value = "Needs";
-  document.getElementById("personGroup").style.display = "none";
-  setTransactionType("income");
-}
-
-/* =========================================================
-   FILTERS
-   ========================================================= */
-function updateFilterOptions(){
-  const month = document.getElementById("filterMonth");
-  const year = document.getElementById("filterYear");
-  const oldMonth = month.value;
-  const oldYear = year.value;
-
-  month.innerHTML = `<option value="all">All Months</option>`;
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  months.forEach((name,index) => { month.innerHTML += `<option value="${index}">${name}</option>`; });
-
-  year.innerHTML = `<option value="all">All Years</option>`;
-  const years = [...new Set(transactions.map(t => new Date(t.date + "T00:00:00").getFullYear()))].sort((a,b) => b-a);
-  years.forEach(y => { year.innerHTML += `<option value="${y}">${y}</option>`; });
-
-  month.value = oldMonth;
-  year.value = oldYear;
-}
-
-function getFiltered(){
-  const date = document.getElementById("filterDate").value;
-  const month = document.getElementById("filterMonth").value;
-  const year = document.getElementById("filterYear").value;
-  const type = document.getElementById("filterType").value;
-  const search = document.getElementById("search").value.toLowerCase();
-
-  return transactions.filter(t => {
-    const d = new Date(t.date + "T00:00:00");
-    const dateOK = !date || t.date === date;
-    const monthOK = month === "all" || d.getMonth() == Number(month);
-    const yearOK = year === "all" || d.getFullYear() == Number(year);
-    const typeOK = type === "all" || t.type === type;
-    const searchOK = !search || (t.item + " " + t.category + " " + t.description).toLowerCase().includes(search);
-    return dateOK && monthOK && yearOK && typeOK && searchOK;
-  });
-}
-
-/* =========================================================
-   RENDER
-   ========================================================= */
-function render(){
-  updateFilterOptions();
-
-  let totalIn = 0, totalOut = 0;
-  transactions.forEach(t => {
-    if(t.type === "income") totalIn += Number(t.amount);
-    else totalOut += Number(t.amount);
-  });
-  const balance = totalIn - totalOut;
-
-  document.getElementById("totalIn").textContent = money(totalIn);
-  document.getElementById("totalOut").textContent = money(totalOut);
-  document.getElementById("balance").textContent = money(balance);
-
-  const a = allocation(totalIn);
-  document.getElementById("needsAllocation").textContent = money(a.needs);
-  document.getElementById("wantsAllocation").textContent = money(a.wants);
-  document.getElementById("savingsAllocation").textContent = money(a.savings);
-  document.getElementById("tithesAllocation").textContent = money(a.tithes);
-  document.getElementById("totalSavings").textContent = money(a.savings);
-
-  const filtered = getFiltered();
-  renderTransactions(filtered);
-  renderBreakdown(filtered);
-  renderMonthly();
-  renderYearly();
-  renderCategoryRemaining(totalIn);
-  drawChart(filtered);
-}
-
-/* =========================================================
-   CATEGORY REMAINING (NEW)
-   ========================================================= */
-function renderCategoryRemaining(totalIn){
-  const grid = document.getElementById("categoryRemainingGrid");
-  const a = allocation(totalIn);
-
-  const spent = {Needs:0, Wants:0, Savings:0, Tithes:0};
-  transactions.forEach(t => {
-    if(t.type !== "expense") return;
-    if(Object.prototype.hasOwnProperty.call(spent, t.category)) spent[t.category] += Number(t.amount);
-  });
-
-  const categories = [
-    {key:"Needs", label:"NEEDS", allocated:a.needs, bar:"needs-bar"},
-    {key:"Wants", label:"WANTS", allocated:a.wants, bar:"wants-bar"},
-    {key:"Savings", label:"SAVINGS", allocated:a.savings, bar:"savings-bar"},
-    {key:"Tithes", label:"TITHES", allocated:a.tithes, bar:"tithes-bar"}
-  ];
-
-  grid.innerHTML = categories.map(c => {
-    const s = spent[c.key];
-    const remaining = c.allocated - s;
-    const percentUsed = c.allocated > 0 ? Math.min((s / c.allocated) * 100, 100) : 0;
-    const over = remaining < 0;
-
-    return `
-      <div class="cat-card">
-        <div class="cat-card-top"><span>${c.label}</span></div>
-        <div class="cat-remaining ${over ? "cat-over" : ""}">${money(remaining)}</div>
-        <div class="muted" style="margin-top:2px;">remaining</div>
-        <div class="progress"><div class="${c.bar}" style="width:${percentUsed}%;"></div></div>
-        <div class="cat-row"><span>Allocated</span><strong>${money(c.allocated)}</strong></div>
-        <div class="cat-row"><span>Spent</span><strong>${money(s)}</strong></div>
-      </div>
-    `;
-  }).join("");
-}
-
-/* =========================================================
-   RUNNING BALANCES
-   ========================================================= */
-function getBalances(){
-  let running = 0;
-  const balances = {};
-  const sorted = [...transactions].sort((a,b) => {
-    const dateCompare = new Date(a.date) - new Date(b.date);
-    if(dateCompare !== 0) return dateCompare;
-    return String(a.id).localeCompare(String(b.id));
-  });
-  sorted.forEach(t => {
-    if(t.type === "income") running += Number(t.amount);
-    else running -= Number(t.amount);
-    balances[t.id] = running;
-  });
-  return balances;
-}
-
-/* =========================================================
-   TRANSACTION TABLE
-   ========================================================= */
-function renderTransactions(list){
-  const table = document.getElementById("transactionTable");
-  document.getElementById("transactionCount").textContent = list.length + (list.length === 1 ? " transaction" : " transactions");
-
-  if(!list.length){
-    table.innerHTML = `<tr><td colspan="7" class="empty">No transactions found.</td></tr>`;
-    return;
-  }
-
-  const balances = getBalances();
-  const sorted = [...list].sort((a,b) => new Date(b.date) - new Date(a.date));
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  table.innerHTML = sorted.map(t => {
-    const sign = t.type === "income" ? "+" : "-";
-    const cls = t.type === "income" ? "green-text" : "red-text";
-    const isPlanned = new Date(t.date + "T00:00:00") > new Date(todayStr + "T00:00:00");
-
-    return `
-      <tr class="${isPlanned ? "planned-transaction" : ""}">
-        <td>${formatDate(t.date)}</td>
-        <td><strong>${escapeHTML(t.description)}</strong></td>
-        <td>${escapeHTML(t.item)}</td>
-        <td>${escapeHTML(t.category)}</td>
-        <td class="${cls}">${sign}${money(t.amount)}</td>
-        <td class="brown-text">${money(balances[t.id])}</td>
-        <td><button class="delete" onclick="deleteTransaction('${escapeJS(t.id)}')">✕</button></td>
-      </tr>
-    `;
-  }).join("");
-}
-
-/* =========================================================
-   BREAKDOWN
-   ========================================================= */
-function renderBreakdown(list){
-  const box = document.getElementById("expenseBreakdown");
-  const totals = {};
-  expenseItems.forEach(item => { totals[item] = 0; });
-
-  list.forEach(t => {
-    if(t.type !== "expense") return;
-    if(!Object.prototype.hasOwnProperty.call(totals, t.item)) totals[t.item] = 0;
-    totals[t.item] += Number(t.amount);
-  });
-
-  const entries = Object.entries(totals).sort((a,b) => b[1] - a[1]);
-  box.innerHTML = entries.map(([item,total]) => `
-    <div class="item-card"><strong>${escapeHTML(item)}</strong><span>${money(total)}</span></div>
-  `).join("");
-}
-
-/* =========================================================
-   MONTHLY / YEARLY
-   ========================================================= */
-function renderMonthly(){
-  const table = document.getElementById("monthlyTable");
-  const groups = {};
-  transactions.forEach(t => {
-    const d = new Date(t.date + "T00:00:00");
-    const key = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
-    if(!groups[key]) groups[key] = {income:0, expense:0};
-    if(t.type === "income") groups[key].income += Number(t.amount);
-    else groups[key].expense += Number(t.amount);
-  });
-
-  const keys = Object.keys(groups).sort().reverse().slice(0,5);
-  if(!keys.length){ table.innerHTML = `<tr><td colspan="4" class="empty">No monthly data.</td></tr>`; return; }
-
-  table.innerHTML = keys.map(key => {
-    const [y,m] = key.split("-");
-    const label = new Date(Number(y), Number(m)-1, 1).toLocaleDateString("en-US",{month:"long",year:"numeric"});
-    const d = groups[key];
-    return `<tr><td>${label}</td><td class="green-text">${money(d.income)}</td><td class="red-text">${money(d.expense)}</td><td class="brown-text">${money(d.income - d.expense)}</td></tr>`;
-  }).join("");
-}
-
-function renderYearly(){
-  const table = document.getElementById("yearlyTable");
-  const groups = {};
-  transactions.forEach(t => {
-    const year = new Date(t.date + "T00:00:00").getFullYear();
-    if(!groups[year]) groups[year] = {income:0, expense:0};
-    if(t.type === "income") groups[year].income += Number(t.amount);
-    else groups[year].expense += Number(t.amount);
-  });
-
-  const years = Object.keys(groups).sort((a,b) => b-a).slice(0,5);
-  if(!years.length){ table.innerHTML = `<tr><td colspan="4" class="empty">No yearly data.</td></tr>`; return; }
-
-  table.innerHTML = years.map(year => {
-    const d = groups[year];
-    return `<tr><td>${year}</td><td class="green-text">${money(d.income)}</td><td class="red-text">${money(d.expense)}</td><td class="brown-text">${money(d.income - d.expense)}</td></tr>`;
-  }).join("");
-}
-
-/* =========================================================
-   CHART
-   ========================================================= */
-function setChartMode(mode){
-  chartMode = mode;
-  ["30days","12months","5years"].forEach(m => {
-    const btn = document.getElementById("chartMode" + m);
-    if(btn) btn.classList.toggle("active", m === mode);
-  });
-  drawChart(getFiltered());
-}
-
-function getChartData(list){
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const labels = [], incomes = [], expenses = [];
-
-  if(chartMode === "12months"){
-    for(let i=11;i>=0;i--){
-      const monthStart = new Date(today.getFullYear(), today.getMonth()-i, 1);
-      const y = monthStart.getFullYear(), m = monthStart.getMonth();
-      let inc = 0, exp = 0;
-      list.forEach(t => {
-        const td = new Date(t.date + "T00:00:00");
-        if(td.getFullYear() === y && td.getMonth() === m){
-          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
-        }
-      });
-      labels.push(monthStart.toLocaleDateString("en-US",{month:"short",year:"2-digit"}));
-      incomes.push(inc); expenses.push(exp);
     }
-  }else if(chartMode === "5years"){
-    for(let i=4;i>=0;i--){
-      const y = today.getFullYear() - i;
-      let inc = 0, exp = 0;
-      list.forEach(t => {
-        const td = new Date(t.date + "T00:00:00");
-        if(td.getFullYear() === y){
-          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
-        }
-      });
-      labels.push(String(y));
-      incomes.push(inc); expenses.push(exp);
+
+}
+
+
+function closeModal(){
+
+    modal.classList.remove("show");
+
+    eventForm.reset();
+
+    delete eventForm.dataset.editingId;
+
+    uploadedAudio = null;
+
+    document.getElementById(
+        "audioGroup"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "audioPreview"
+    ).style.display =
+        "none";
+
+
+    document.getElementById(
+        "customRepeatGroup"
+    ).style.display =
+        "none";
+
+}
+
+
+/* =========================================
+   DRAG TO SCHEDULE
+   (multi-day drag in Month View,
+   multi-hour drag in Week/Day View)
+
+   Uses classic mouse events (mousedown /
+   mouseenter / mouseup) for desktop and
+   classic touch events (touchstart /
+   touchmove / touchend) for mobile,
+   rather than the Pointer Events API,
+   for the widest possible compatibility.
+========================================= */
+
+let isDragging = false;
+
+let dragType = null;
+/* "date" for month view, "hour" for week/day view */
+
+let dragStartInfo = null;
+let dragEndInfo = null;
+let dragMoved = false;
+
+
+function startDateDrag(dateKey){
+
+    isDragging = true;
+
+    dragType = "date";
+
+    dragMoved = false;
+
+    dragStartInfo = { dateKey: dateKey };
+    dragEndInfo = { dateKey: dateKey };
+
+    updateDateDragHighlight();
+
+}
+
+
+function extendDateDrag(dateKey){
+
+    if(!isDragging || dragType !== "date"){
+
+        return;
+
     }
-  }else{
-    for(let i=29;i>=0;i--){
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split("T")[0];
-      let inc = 0, exp = 0;
-      list.forEach(t => {
-        if(t.date === key){
-          if(t.type === "income") inc += Number(t.amount); else exp += Number(t.amount);
-        }
-      });
-      labels.push(shortDate(key));
-      incomes.push(inc); expenses.push(exp);
+
+    if(dateKey !== dragEndInfo.dateKey){
+
+        dragMoved = true;
+
     }
-  }
 
-  return {labels, incomes, expenses};
+    dragEndInfo = { dateKey: dateKey };
+
+    updateDateDragHighlight();
+
 }
 
-function drawChart(list){
-  const canvas = document.getElementById("cashFlowChart");
-  const rect = canvas.getBoundingClientRect();
-  const ratio = window.devicePixelRatio || 1;
-  canvas.width = rect.width * ratio;
-  canvas.height = rect.height * ratio;
-  const ctx = canvas.getContext("2d");
-  ctx.scale(ratio,ratio);
-  const width = rect.width, height = rect.height;
-  ctx.clearRect(0,0,width,height);
 
-  const {labels, incomes, expenses} = getChartData(list);
-  const hasData = incomes.some(v => v > 0) || expenses.some(v => v > 0);
+function startHourDrag(dateKey, hour, quickAddOnClick){
 
-  if(!hasData){
-    ctx.fillStyle = "#776b63";
-    ctx.font = "15px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Add transactions to see your cash flow.", width/2, height/2);
-    return;
-  }
+    isDragging = true;
 
-  const max = Math.max(...incomes, ...expenses, 1);
+    dragType = "hour";
 
-  const left = 45, right = 20, top = 35, bottom = 35;
-  const chartWidth = width - left - right;
-  const chartHeight = height - top - bottom;
+    dragMoved = false;
 
-  ctx.strokeStyle = "#dfd0c5";
-  ctx.lineWidth = 1;
-  for(let i=0;i<=4;i++){
-    const y = top + chartHeight * i/4;
-    ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(width-right,y); ctx.stroke();
-  }
-
-  function drawLine(values,color){
-    ctx.beginPath();
-    values.forEach((value,index) => {
-      const x = left + (index / Math.max(values.length-1,1)) * chartWidth;
-      const y = height - bottom - (value/max) * chartHeight;
-      if(index === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    });
-    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
-    values.forEach((value,index) => {
-      const x = left + (index / Math.max(values.length-1,1)) * chartWidth;
-      const y = height - bottom - (value/max) * chartHeight;
-      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
-    });
-  }
-
-  drawLine(incomes, "#4f7659");
-  drawLine(expenses, "#b85f3d");
-
-  ctx.font = "11px Arial"; ctx.textAlign = "center"; ctx.fillStyle = "#776b63";
-  const count = Math.min(labels.length,8);
-  for(let i=0;i<count;i++){
-    const index = Math.floor(i * (labels.length-1) / Math.max(count-1,1));
-    const x = left + (index / Math.max(labels.length-1,1)) * chartWidth;
-    ctx.fillText(labels[index], x, height-10);
-  }
-
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#4f7659"; ctx.fillText("● Cash In", left, 18);
-  ctx.fillStyle = "#b85f3d"; ctx.fillText("● Cash Out", left+85, 18);
-}
-
-/* =========================================================
-   DELETE TRANSACTION
-   ========================================================= */
-function deleteTransaction(id){
-  if(!confirm("Delete this transaction?")) return;
-  transactions = transactions.filter(t => String(t.id) !== String(id));
-  saveData();
-  render();
-}
-
-/* =========================================================
-   CSV / EXCEL EXPORT
-   ========================================================= */
-function exportCSV(){
-  if(!transactions.length){ alert("There is no data to export."); return; }
-  const rows = [["ID","Date","Type","Category","Item","Description","Amount"]];
-  transactions.forEach(t => { rows.push([t.id,t.date,t.type,t.category,t.item,t.description,Number(t.amount)]); });
-  const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(",")).join("\n");
-  downloadFile(csv, "my-money-backup.csv", "text/csv;charset=utf-8;");
-}
-
-function exportXLSX(){
-  if(!transactions.length){ alert("There is no data to export."); return; }
-  if(typeof XLSX === "undefined"){ alert("The Excel library could not be loaded. Check your internet connection and try again."); return; }
-  const rows = transactions.map(t => ({ID:t.id, Date:t.date, Type:t.type, Category:t.category, Item:t.item, Description:t.description, Amount:Number(t.amount)}));
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-  XLSX.writeFile(workbook, "my-money-backup.xlsx");
-}
-
-function downloadFile(content, filename, type){
-  const blob = new Blob([content], {type});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url; link.download = filename;
-  document.body.appendChild(link); link.click(); link.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* =========================================================
-   RESTORE BACKUP
-   ========================================================= */
-async function handleBackupFile(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const status = document.getElementById("restoreStatus");
-  status.textContent = "Reading " + file.name + "...";
-
-  try{
-    const extension = file.name.split(".").pop().toLowerCase();
-    let imported = [];
-    if(extension === "csv") imported = await readCSV(file);
-    else if(extension === "xlsx" || extension === "xls") imported = await readExcel(file);
-    else throw new Error("Unsupported file type.");
-
-    if(!imported.length) throw new Error("No recognizable transactions were found in this file.");
-
-    showRestoreChoice(imported, file.name);
-  }catch(error){
-    console.error(error);
-    status.textContent = "Import failed: " + error.message;
-    alert("The backup could not be imported.\n\n" + error.message);
-  }
-
-  event.target.value = "";
-}
-
-function readCSV(file){
-  return new Promise((resolve,reject) => {
-    const reader = new FileReader();
-    reader.onload = function(event){
-      try{
-        const text = event.target.result;
-        const workbook = XLSX.read(text, {type:"string", cellDates:true});
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(firstSheet, {defval:""});
-        resolve(normalizeImportedRows(rows));
-      }catch(error){ reject(error); }
+    dragStartInfo = {
+        dateKey: dateKey,
+        hour: hour,
+        quickAddOnClick: quickAddOnClick
     };
-    reader.onerror = () => reject(new Error("Could not read CSV file."));
-    reader.readAsText(file);
-  });
-}
 
-function readExcel(file){
-  return new Promise((resolve,reject) => {
-    const reader = new FileReader();
-    reader.onload = function(event){
-      try{
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, {type:"array", cellDates:true});
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
-        resolve(normalizeImportedRows(rows));
-      }catch(error){ reject(error); }
+    dragEndInfo = {
+        dateKey: dateKey,
+        hour: hour
     };
-    reader.onerror = () => reject(new Error("Could not read Excel file."));
-    reader.readAsArrayBuffer(file);
-  });
+
+    updateHourDragHighlight();
+
 }
 
-function normalizeImportedRows(rows){
-  const result = [];
-  rows.forEach((row,index) => {
-    const normalized = {};
-    Object.keys(row).forEach(key => {
-      const clean = String(key).trim().toLowerCase().replace(/[\s_-]+/g,"");
-      normalized[clean] = row[key];
+
+function extendHourDrag(dateKey, hour){
+
+    if(!isDragging || dragType !== "hour"){
+
+        return;
+
+    }
+
+    if(dateKey !== dragStartInfo.dateKey){
+
+        return;
+
+    }
+
+    if(hour !== dragEndInfo.hour){
+
+        dragMoved = true;
+
+    }
+
+    dragEndInfo = {
+        dateKey: dateKey,
+        hour: hour
+    };
+
+    updateHourDragHighlight();
+
+}
+
+
+function updateDateDragHighlight(){
+
+    const keys =
+        [
+            dragStartInfo.dateKey,
+            dragEndInfo.dateKey
+        ].sort();
+
+
+    document
+    .querySelectorAll("#calendar .day")
+    .forEach(function(cellEl){
+
+        const key =
+            cellEl.dataset.date;
+
+        if(
+            key >= keys[0] &&
+            key <= keys[1]
+        ){
+
+            cellEl.classList.add(
+                "drag-range"
+            );
+
+        }else{
+
+            cellEl.classList.remove(
+                "drag-range"
+            );
+
+        }
+
     });
 
-    const dateValue = normalized.date || normalized.transactiondate || normalized.datetime;
-    const amountValue = normalized.amount || normalized.total || normalized.value;
-    const typeValue = normalized.type || normalized.transactiontype || normalized.cashflow;
-    const categoryValue = normalized.category || normalized.designation;
-    const itemValue = normalized.item || normalized.expense || normalized.expenseitem || normalized.name;
-    const descriptionValue = normalized.description || normalized.note || normalized.notes || "";
+}
 
-    if(!dateValue || amountValue === undefined || amountValue === "") return;
 
-    const amount = parseAmount(amountValue);
-    if(!amount || amount <= 0) return;
+function clearDateDragHighlight(){
 
-    const type = normalizeType(typeValue, categoryValue, descriptionValue);
-    const category = normalizeCategory(categoryValue, type);
-    const item = String(itemValue || category || "Imported").trim();
-    const description = String(descriptionValue || item).trim();
-    const date = normalizeDate(dateValue);
-    if(!date) return;
+    document
+    .querySelectorAll(
+        "#calendar .day.drag-range"
+    )
+    .forEach(function(cellEl){
 
-    result.push({
-      id: String(normalized.id || "IMPORT-" + Date.now() + "-" + index + "-" + Math.random().toString(36).substring(2,6)),
-      date, amount, type,
-      category: type === "income" ? "Cash In" : category,
-      item, description
+        cellEl.classList.remove(
+            "drag-range"
+        );
+
     });
-  });
-  return result;
+
 }
 
-/* FIX: previously only stripped ₱ / "PHP" / commas, so imports in
-   any other currency (USD, EUR, etc.) silently parsed to 0 and were
-   dropped. Now strips any non-numeric characters. */
-function parseAmount(value){
-  if(typeof value === "number") return value;
-  let text = String(value).trim().replace(/[^0-9.\-]/g,"");
-  const number = Number(text);
-  return Number.isFinite(number) ? number : 0;
+
+function updateHourDragHighlight(){
+
+    const hours =
+        [
+            dragStartInfo.hour,
+            dragEndInfo.hour
+        ].sort(function(a,b){
+            return a - b;
+        });
+
+
+    document
+    .querySelectorAll(".week-cell[data-hour]")
+    .forEach(function(cellEl){
+
+        const sameDay =
+            cellEl.dataset.date ===
+            dragStartInfo.dateKey;
+
+        const hour =
+            Number(cellEl.dataset.hour);
+
+        if(
+            sameDay &&
+            hour >= hours[0] &&
+            hour <= hours[1]
+        ){
+
+            cellEl.classList.add(
+                "drag-range"
+            );
+
+        }else{
+
+            cellEl.classList.remove(
+                "drag-range"
+            );
+
+        }
+
+    });
+
 }
 
-function normalizeDate(value){
-  if(value instanceof Date && !isNaN(value)) return value.toISOString().split("T")[0];
-  if(typeof value === "number"){
-    const date = new Date(Math.round((value - 25569) * 86400 * 1000));
-    if(!isNaN(date)) return date.toISOString().split("T")[0];
-  }
-  const text = String(value).trim();
-  if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-  let match = text.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-  if(match) return match[3] + "-" + String(match[1]).padStart(2,"0") + "-" + String(match[2]).padStart(2,"0");
-  const parsed = new Date(text);
-  if(!isNaN(parsed)) return parsed.toISOString().split("T")[0];
-  return "";
+
+function clearHourDragHighlight(){
+
+    document
+    .querySelectorAll(
+        ".week-cell.drag-range"
+    )
+    .forEach(function(cellEl){
+
+        cellEl.classList.remove(
+            "drag-range"
+        );
+
+    });
+
 }
 
-/* FIX: original used text.includes("in") / text.includes("out"),
-   which false-matched words like "Dining" or "Printing" as income
-   and "Outreach" as expense. Now uses whole-word / phrase matching. */
-function normalizeType(value, category, description){
-  const text = String(value || "").trim().toLowerCase();
 
-  if(/\bincome\b/.test(text) || /\bcash ?in\b/.test(text) || /\bcredit\b/.test(text) || /\bdeposit\b/.test(text) || text === "in"){
-    return "income";
-  }
-  if(/\bexpense\b/.test(text) || /\bcash ?out\b/.test(text) || /\bdebit\b/.test(text) || /\bspend\b/.test(text) || text === "out"){
-    return "expense";
-  }
+/* MOUSE: track cursor movement across cells
+   via elementFromPoint, mirroring the touch
+   handling below (this was previously
+   missing, which is why dragging didn't
+   extend the selection for mouse users). */
 
-  const cat = String(category || "").toLowerCase();
-  if(cat.includes("income") || cat.includes("cash in")) return "income";
+document.addEventListener(
+    "mousemove",
+    function(e){
 
-  return "expense";
+        if(!isDragging) return;
+
+
+        const target =
+            document.elementFromPoint(
+                e.clientX,
+                e.clientY
+            );
+
+        if(!target) return;
+
+
+        if(dragType === "date"){
+
+            const cellEl =
+                target.closest(
+                    "#calendar .day"
+                );
+
+            if(
+                cellEl &&
+                cellEl.dataset.date
+            ){
+
+                extendDateDrag(
+                    cellEl.dataset.date
+                );
+
+            }
+
+        }
+
+
+        if(dragType === "hour"){
+
+            const cellEl =
+                target.closest(
+                    ".week-cell[data-hour]"
+                );
+
+            if(
+                cellEl &&
+                cellEl.dataset.date
+            ){
+
+                extendHourDrag(
+                    cellEl.dataset.date,
+                    Number(cellEl.dataset.hour)
+                );
+
+            }
+
+        }
+
+    }
+);
+
+
+/* TOUCH: track finger movement across
+   cells via elementFromPoint, since touch
+   doesn't fire mouseenter/mouseover on
+   cells other than the one it started on. */
+
+document.addEventListener(
+    "touchmove",
+    function(e){
+
+        if(!isDragging) return;
+
+        const touch =
+            e.touches[0];
+
+        if(!touch) return;
+
+
+        const target =
+            document.elementFromPoint(
+                touch.clientX,
+                touch.clientY
+            );
+
+        if(!target) return;
+
+
+        if(dragType === "date"){
+
+            const cellEl =
+                target.closest(
+                    "#calendar .day"
+                );
+
+            if(
+                cellEl &&
+                cellEl.dataset.date
+            ){
+
+                extendDateDrag(
+                    cellEl.dataset.date
+                );
+
+            }
+
+        }
+
+
+        if(dragType === "hour"){
+
+            const cellEl =
+                target.closest(
+                    ".week-cell[data-hour]"
+                );
+
+            if(
+                cellEl &&
+                cellEl.dataset.date
+            ){
+
+                extendHourDrag(
+                    cellEl.dataset.date,
+                    Number(cellEl.dataset.hour)
+                );
+
+            }
+
+        }
+
+
+        /* Prevent the page from scrolling
+           while dragging across cells. */
+
+        e.preventDefault();
+
+    },
+    { passive: false }
+);
+
+
+function finishDrag(){
+
+    if(!isDragging) return;
+
+    isDragging = false;
+
+
+    if(dragType === "date"){
+
+        clearDateDragHighlight();
+
+        finishDateDrag();
+
+    }
+
+
+    if(dragType === "hour"){
+
+        clearHourDragHighlight();
+
+        finishHourDrag();
+
+    }
+
+
+    dragType = null;
+    dragStartInfo = null;
+    dragEndInfo = null;
+
 }
 
-function normalizeCategory(value, type){
-  if(type === "income") return "Cash In";
-  const text = String(value || "").trim().toLowerCase();
-  if(text === "need" || text === "needs") return "Needs";
-  if(text === "want" || text === "wants") return "Wants";
-  if(text === "saving" || text === "savings") return "Savings";
-  if(text === "tithe" || text === "tithes") return "Tithes";
-  return "Needs";
+
+document.addEventListener(
+    "mouseup",
+    finishDrag
+);
+
+
+document.addEventListener(
+    "touchend",
+    finishDrag
+);
+
+
+document.addEventListener(
+    "touchcancel",
+    finishDrag
+);
+
+
+function finishDateDrag(){
+
+    const keys =
+        [
+            dragStartInfo.dateKey,
+            dragEndInfo.dateKey
+        ].sort();
+
+
+    if(!dragMoved){
+
+        /* Plain click — select this day,
+           same as the old behavior. */
+
+        selectedDate =
+            new Date(
+                keys[0] + "T00:00:00"
+            );
+
+        renderCalendar();
+        renderEvents();
+        renderWeekCalendar();
+        renderDayCalendar();
+
+        return;
+
+    }
+
+
+    /* Real drag across multiple days —
+       open Add Event prefilled with the
+       dragged date range. */
+
+    openModal();
+
+    document.getElementById(
+        "eventStartDate"
+    ).value =
+        keys[0];
+
+    document.getElementById(
+        "eventEndDate"
+    ).value =
+        keys[1];
+
 }
 
-function showRestoreChoice(imported, filename){
-  const status = document.getElementById("restoreStatus");
-  const choice = prompt(
-    "Backup loaded successfully: " + filename + "\n\n" + imported.length + " transactions found.\n\n" +
-    "Type ADD to add them to your existing data.\nType REPLACE to delete current data and restore this backup.\nPress Cancel to do nothing."
-  );
 
-  if(choice === null){ status.textContent = "Restore cancelled."; return; }
-  const action = choice.trim().toLowerCase();
-  if(action !== "add" && action !== "replace"){
-    status.textContent = "Restore cancelled. Type ADD or REPLACE.";
-    alert("Please type ADD or REPLACE.");
+function finishHourDrag(){
+
+    const hours =
+        [
+            dragStartInfo.hour,
+            dragEndInfo.hour
+        ].sort(function(a,b){
+            return a - b;
+        });
+
+
+    if(
+        !dragMoved &&
+        !dragStartInfo.quickAddOnClick
+    ){
+
+        /* Plain click in Week View —
+           select this day, same as the
+           old behavior. */
+
+        selectedDate =
+            new Date(
+                dragStartInfo.dateKey +
+                "T00:00:00"
+            );
+
+        renderCalendar();
+        renderEvents();
+        renderWeekCalendar();
+        renderDayCalendar();
+
+        return;
+
+    }
+
+
+    /* Real drag, or a quick click in
+       Day View — open Add Event prefilled
+       with the time range. A plain click
+       defaults to a 1-hour block. */
+
+    const endHour =
+        Math.min(
+            hours[1] + 1,
+            24
+        );
+
+    openModal();
+
+    document.getElementById(
+        "eventStartDate"
+    ).value =
+        dragStartInfo.dateKey;
+
+    document.getElementById(
+        "eventEndDate"
+    ).value =
+        dragStartInfo.dateKey;
+
+    document.getElementById(
+        "timeType"
+    ).value =
+        "specific";
+
+    updateTimeFields();
+
+    document.getElementById(
+        "eventStart"
+    ).value =
+        String(hours[0]).padStart(2,"0") +
+        ":00";
+
+    document.getElementById(
+        "eventEnd"
+    ).value =
+        endHour === 24
+        ? "23:59"
+        : String(endHour).padStart(2,"0") +
+            ":00";
+
+}
+
+
+
+/* =========================================
+   OPEN BUTTONS
+========================================= */
+
+document
+.getElementById("addEventButton")
+.addEventListener(
+    "click",
+    openModal
+);
+
+
+document
+.getElementById("headerAdd")
+.addEventListener(
+    "click",
+    openModal
+);
+
+
+document
+.getElementById("closeModal")
+.addEventListener(
+    "click",
+    closeModal
+);
+
+/* =========================================
+   EDIT EVENT
+========================================= */
+
+function openEditModal(event){
+
+    modal.classList.add("show");
+
+    document.querySelector(
+        ".modal-header h2"
+    ).textContent =
+        "Edit Event";
+
+
+    document.getElementById(
+        "eventTitle"
+    ).value =
+        event.title || "";
+
+
+    document.getElementById(
+        "eventCategory"
+    ).value =
+        event.category || "Personal";
+
+
+    document.getElementById(
+        "eventPriority"
+    ).value =
+        event.priority || "none";
+
+
+    document.getElementById(
+    "eventStartDate"
+).value =
+    event.startDate || "";
+
+
+document.getElementById(
+    "eventEndDate"
+).value =
+    event.endDate || event.startDate || "";
+
+
+    document.getElementById(
+        "eventStart"
+    ).value =
+        event.start || "";
+
+
+    document.getElementById(
+        "eventEnd"
+    ).value =
+        event.end || "";
+
+
+    document.getElementById(
+        "eventDescription"
+    ).value =
+        event.description || "";
+
+
+    document.getElementById(
+        "eventRepeat"
+    ).value =
+        event.repeat || "none";
+
+    /* Load custom repeat settings */
+
+document.querySelectorAll(
+    ".repeat-day"
+).forEach(function(checkbox){
+
+    checkbox.checked =
+        event.customRepeat &&
+        event.customRepeat.days
+        ? event.customRepeat.days.includes(
+            Number(checkbox.value)
+        )
+        : false;
+
+});
+
+
+if(event.repeat === "custom"){
+
+    customRepeatGroup.style.display =
+        "block";
+
+    if(event.customRepeat){
+
+        document.getElementById(
+            "repeatEndType"
+        ).value =
+            event.customRepeat.endType ||
+            "never";
+
+
+        document.getElementById(
+            "repeatEndDate"
+        ).value =
+            event.customRepeat.endDate ||
+            "";
+
+
+        document.getElementById(
+            "repeatOccurrences"
+        ).value =
+            event.customRepeat.occurrences ||
+            "";
+
+    }
+
+}else{
+
+    customRepeatGroup.style.display =
+        "none";
+
+}
+
+
+    document.getElementById(
+        "alarmType"
+    ).value =
+        event.alarm || "none";
+
+
+    uploadedAudio =
+        event.audio || null;
+
+
+    if(event.audio){
+
+        const preview =
+            document.getElementById(
+                "audioPreview"
+            );
+
+        preview.src =
+            event.audio;
+
+        preview.style.display =
+            "block";
+
+    }
+
+
+    document.getElementById(
+        "audioGroup"
+    ).style.display =
+        event.alarm === "custom"
+        ? "block"
+        : "none";
+
+
+    eventForm.dataset.editingId =
+        event.id;
+
+    document.getElementById("timeType").value =
+    event.timeType || "specific";
+
+updateTimeFields();
+
+}
+    
+
+/* =========================================
+   DATE / MONTH
+========================================= */
+
+document
+.getElementById("previousMonth")
+.addEventListener(
+    "click",
+    function(){
+
+        if(
+            weekViewButton.classList.contains("active")
+        ){
+
+            selectedDate.setDate(
+    selectedDate.getDate() - 7
+);
+
+            currentDate =
+                new Date(selectedDate);
+
+            renderWeekCalendar();
+            renderDayCalendar();
+            renderEvents();
+
+        }else if(
+            dayViewButton.classList.contains("active")
+        ){
+
+            selectedDate.setDate(
+                selectedDate.getDate() - 1
+            );
+
+            currentDate =
+                new Date(selectedDate);
+
+            renderDayCalendar();
+            renderEvents();
+
+        }else if(
+            habitViewButton.classList.contains("active")
+        ){
+
+            habitMonthDate.setMonth(
+                habitMonthDate.getMonth() - 1
+            );
+
+            renderHabitTracker();
+
+        }else{
+
+            currentDate.setMonth(
+                currentDate.getMonth() - 1
+            );
+
+            renderCalendar();
+
+        }
+
+    }
+);
+
+
+document
+.getElementById("nextMonth")
+.addEventListener(
+    "click",
+    function(){
+
+        if(
+            weekViewButton.classList.contains("active")
+        ){
+
+            selectedDate.setDate(
+    selectedDate.getDate() + 7
+);
+
+currentDate =
+    new Date(selectedDate);
+
+            renderWeekCalendar();
+            renderDayCalendar();
+            renderEvents();
+
+        }else if(
+            dayViewButton.classList.contains("active")
+        ){
+
+            selectedDate.setDate(
+                selectedDate.getDate() + 1
+            );
+
+            currentDate =
+                new Date(selectedDate);
+
+            renderDayCalendar();
+            renderEvents();
+
+        }else if(
+            habitViewButton.classList.contains("active")
+        ){
+
+            habitMonthDate.setMonth(
+                habitMonthDate.getMonth() + 1
+            );
+
+            renderHabitTracker();
+
+        }else{
+
+            currentDate.setMonth(
+                currentDate.getMonth() + 1
+            );
+
+            renderCalendar();
+
+        }
+
+    }
+);
+
+
+document
+.getElementById("todayButton")
+.addEventListener(
+    "click",
+    function(){
+
+        currentDate =
+            new Date();
+
+        selectedDate =
+    new Date();
+
+        habitMonthDate =
+            new Date();
+
+        renderCalendar();
+
+renderEvents();
+
+renderWeekCalendar();
+renderDayCalendar();
+
+        if(
+            habitViewButton.classList.contains("active")
+        ){
+
+            renderHabitTracker();
+
+        }
+
+    }
+);
+
+/* =========================================
+   TIME TYPE
+========================================= */
+
+const timeType =
+    document.getElementById("timeType");
+
+const specificTimeGroup =
+    document.getElementById("specificTimeGroup");
+
+const endTimeGroup =
+    document.getElementById("endTimeGroup");
+
+
+function updateTimeFields(){
+
+    if(timeType.value === "specific"){
+
+        specificTimeGroup.style.display =
+            "block";
+
+        endTimeGroup.style.display =
+            "block";
+
+    }else{
+
+        specificTimeGroup.style.display =
+            "none";
+
+        endTimeGroup.style.display =
+            "none";
+
+    }
+
+}
+
+
+timeType.addEventListener(
+    "change",
+    updateTimeFields
+);
+
+
+updateTimeFields();
+
+/* =========================================
+   CUSTOM REPEAT
+========================================= */
+
+const eventRepeat =
+    document.getElementById(
+        "eventRepeat"
+    );
+
+const customRepeatGroup =
+    document.getElementById(
+        "customRepeatGroup"
+    );
+
+
+eventRepeat.addEventListener(
+    "change",
+    function(){
+
+        if(
+            this.value === "custom"
+        ){
+
+            customRepeatGroup.style.display =
+                "block";
+
+        }else{
+
+            customRepeatGroup.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+const repeatEndType =
+    document.getElementById(
+        "repeatEndType"
+    );
+
+const repeatEndDateGroup =
+    document.getElementById(
+        "repeatEndDateGroup"
+    );
+
+const repeatOccurrencesGroup =
+    document.getElementById(
+        "repeatOccurrencesGroup"
+    );
+
+
+repeatEndType.addEventListener(
+    "change",
+    function(){
+
+        repeatEndDateGroup.style.display =
+            "none";
+
+        repeatOccurrencesGroup.style.display =
+            "none";
+
+
+        if(
+            this.value === "date"
+        ){
+
+            repeatEndDateGroup.style.display =
+                "block";
+
+        }
+
+
+        if(
+            this.value === "occurrences"
+        ){
+
+            repeatOccurrencesGroup.style.display =
+                "block";
+
+        }
+
+    }
+);
+    
+/* =========================================
+   ALARM SELECT
+========================================= */
+
+document
+.getElementById("alarmType")
+.addEventListener(
+    "change",
+    function(){
+
+        const group =
+            document.getElementById(
+                "audioGroup"
+            );
+
+
+        if(
+            this.value ===
+            "custom"
+        ){
+
+            group.style.display =
+                "block";
+
+        }else{
+
+            group.style.display =
+                "none";
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   AUDIO UPLOAD
+========================================= */
+
+document
+.getElementById("audioFile")
+.addEventListener(
+    "change",
+    function(){
+
+        const file =
+            this.files[0];
+
+
+        if(!file) return;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload =
+            function(e){
+
+                uploadedAudio =
+                    e.target.result;
+
+
+                const preview =
+                    document.getElementById(
+                        "audioPreview"
+                    );
+
+
+                preview.src =
+                    uploadedAudio;
+
+
+                preview.style.display =
+                    "block";
+
+            };
+
+
+        reader.readAsDataURL(file);
+
+    }
+);
+
+
+/* =========================================
+   SAVE EVENT
+========================================= */
+
+eventForm.addEventListener(
+    "submit",
+    function(e){
+
+        e.preventDefault();
+
+
+        const title =
+            document.getElementById(
+                "eventTitle"
+            ).value.trim();
+
+
+        const startDate =
+    document.getElementById(
+        "eventStartDate"
+    ).value;
+
+
+const endDate =
+    document.getElementById(
+        "eventEndDate"
+    ).value;
+
+        if(!startDate){
+
+    alert(
+        "Please choose a start date."
+    );
+
     return;
-  }
 
-  if(action === "replace"){
-    const confirmed = confirm("REPLACE will delete your current dashboard data and restore the selected backup.\n\nContinue?");
-    if(!confirmed){ status.textContent = "Restore cancelled."; return; }
-    transactions = imported;
-  }else{
-    const existingIds = new Set(transactions.map(t => String(t.id)));
-    let added = 0;
-    imported.forEach(t => {
-      if(!existingIds.has(String(t.id))){
-        transactions.push(t);
-        existingIds.add(String(t.id));
-        added++;
-      }
-    });
-    status.textContent = "Added " + added + " new transactions.";
-  }
-
-  saveData();
-  render();
-
-  if(action === "replace") status.textContent = "Successfully restored " + imported.length + " transactions.";
-
-  alert(action === "replace" ? "Backup restored successfully!" : "Backup imported successfully!");
 }
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
-function formatDate(date){
-  return new Date(date + "T00:00:00").toLocaleDateString("en-PH",{month:"short",day:"numeric",year:"numeric"});
+
+if(!endDate){
+
+    alert(
+        "Please choose an end date."
+    );
+
+    return;
+
 }
-function shortDate(date){
-  return new Date(date + "T00:00:00").toLocaleDateString("en-PH",{month:"short",day:"numeric"});
+
+
+if(endDate < startDate){
+
+    alert(
+        "End date cannot be before the start date."
+    );
+
+    return;
+
 }
+
+
+        if(!title){
+
+            alert(
+                "Please enter an event title."
+            );
+
+            return;
+
+        }
+
+
+        const editingId =
+            eventForm.dataset.editingId;
+
+
+        /* =================================
+           EDIT EXISTING EVENT
+        ================================= */
+
+        if(editingId){
+
+            const event =
+                events.find(
+                    function(item){
+
+                        return item.id ===
+                            editingId;
+
+                    }
+                );
+
+
+            if(event){
+
+                event.title =
+                    title;
+
+                event.timeType =
+    document.getElementById(
+        "timeType"
+    ).value;
+
+                event.category =
+                    document.getElementById(
+                        "eventCategory"
+                    ).value;
+
+                event.priority =
+                    document.getElementById(
+                        "eventPriority"
+                    ).value;
+
+                event.startDate =
+    startDate;
+
+event.endDate =
+    endDate;
+                event.start =
+                    document.getElementById(
+                        "eventStart"
+                    ).value;
+
+                event.end =
+                    document.getElementById(
+                        "eventEnd"
+                    ).value;
+
+                event.description =
+                    document.getElementById(
+                        "eventDescription"
+                    ).value;
+
+                event.repeat =
+                    document.getElementById(
+                        "eventRepeat"
+                    ).value;
+
+                event.customRepeat =
+    getCustomRepeatSettings();
+                
+                event.alarm =
+                    document.getElementById(
+                        "alarmType"
+                    ).value;
+
+                event.audio =
+                    uploadedAudio;
+
+            }
+
+
+            delete eventForm.dataset.editingId;
+
+
+            saveEvents();
+
+
+            selectedDate =
+    new Date(
+        startDate + "T00:00:00"
+    );
+
+
+currentDate =
+    new Date(
+        startDate + "T00:00:00"
+    );
+
+
+            closeModal();
+
+
+            renderCalendar();
+
+            renderEvents();
+
+            renderWeekCalendar();
+            renderDayCalendar();
+
+
+            alert(
+                "Event updated! ✏️"
+            );
+
+
+            return;
+
+        }
+
+
+        /* =================================
+           CREATE NEW EVENT
+        ================================= */
+
+        const newEvent = {
+
+            id:
+                Date.now().toString(),
+
+            title:
+                title,
+
+            category:
+                document.getElementById(
+                    "eventCategory"
+                ).value,
+
+            priority:
+                document.getElementById(
+                    "eventPriority"
+                ).value,
+
+            startDate:
+    startDate,
+
+endDate:
+    endDate,
+
+    timeType:
+    document.getElementById(
+        "timeType"
+    ).value,
+
+            start:
+                document.getElementById(
+                    "eventStart"
+                ).value,
+
+            end:
+                document.getElementById(
+                    "eventEnd"
+                ).value,
+
+            description:
+                document.getElementById(
+                    "eventDescription"
+                ).value,
+
+            repeat:
+                document.getElementById(
+                    "eventRepeat"
+                ).value,
+
+                    customRepeat:
+    getCustomRepeatSettings(),
+
+            alarm:
+                document.getElementById(
+                    "alarmType"
+                ).value,
+
+            audio:
+                uploadedAudio,
+
+            status:
+                "scheduled",
+
+            moved:
+                0
+
+        };
+
+
+        events.push(
+            newEvent
+        );
+
+
+        saveEvents();
+
+
+        selectedDate =
+    new Date(
+        startDate + "T00:00:00"
+    );
+
+
+currentDate =
+    new Date(
+        startDate + "T00:00:00"
+    );
+
+
+        closeModal();
+
+
+        renderCalendar();
+
+        renderEvents();
+
+        renderWeekCalendar();
+        renderDayCalendar();
+
+
+        alert(
+            "Event saved successfully! 📅"
+        );
+
+    }
+);
+
+
+/* =========================================
+   BRAIN DUMP
+========================================= */
+
+document
+.getElementById("saveBrainDump")
+.addEventListener(
+    "click",
+    function(){
+
+        const text =
+            document.getElementById(
+                "brainDump"
+            ).value;
+
+
+        localStorage.setItem(
+            "mindcal_brain_dump",
+            text
+        );
+
+
+        const message =
+            document.getElementById(
+                "brainMessage"
+            );
+
+
+        message.textContent =
+            "✓ Brain dump saved!";
+
+
+        setTimeout(
+            function(){
+
+                message.textContent =
+                    "";
+
+            },
+            2500
+        );
+
+    }
+);
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
 function escapeHTML(text){
-  return String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-}
-function escapeJS(text){
-  return String(text).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,'\\"');
-}
 
-/* =========================================================
-   FINANCIAL GOALS
-   ========================================================= */
-function openGoalModal(){ document.getElementById("goalModal").classList.add("active"); }
-function closeGoalModal(){ document.getElementById("goalModal").classList.remove("active"); }
+    return String(text)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
-function addGoal(){
-  const name = document.getElementById("goalName").value.trim();
-  const icon = document.getElementById("goalIcon").value.trim() || "🎯";
-  const category = document.getElementById("goalCategory").value;
-  const target = Number(document.getElementById("goalTarget").value);
-  const saved = Number(document.getElementById("goalSaved").value) || 0;
-  const targetDate = document.getElementById("goalDate").value;
-  const priority = document.getElementById("goalPriority").value;
-  const description = document.getElementById("goalDescription").value.trim();
-
-  if(!name){ alert("Please enter a goal name."); return; }
-  if(!target || target <= 0){ alert("Please enter a valid target amount."); return; }
-  if(saved < 0){ alert("Saved amount cannot be negative."); return; }
-  if(saved > target){ alert("Saved amount cannot be greater than the target."); return; }
-
-  const goal = {
-    id: "G-" + Date.now() + "-" + Math.random().toString(36).substring(2,7),
-    name, icon, category, target, saved, targetDate, priority, description
-  };
-
-  financialGoals.push(goal);
-  saveGoals();
-  resetGoalForm();
-  closeGoalModal();
-  renderGoals();
 }
 
-function resetGoalForm(){
-  document.getElementById("goalName").value = "";
-  document.getElementById("goalIcon").value = "🎯";
-  document.getElementById("goalCategory").value = "House";
-  document.getElementById("goalTarget").value = "";
-  document.getElementById("goalSaved").value = "";
-  document.getElementById("goalDate").value = "";
-  document.getElementById("goalPriority").value = "Essential";
-  document.getElementById("goalDescription").value = "";
+
+/* =========================================
+   CLOSE MODAL OUTSIDE
+========================================= */
+
+modal.addEventListener(
+    "click",
+    function(e){
+
+        if(
+            e.target === modal
+        ){
+
+            closeModal();
+
+        }
+
+    }
+);
+
+/* =========================================
+   CALENDAR VIEW SWITCHING
+========================================= */
+
+function showMonthView(){
+
+    calendar.style.display = "grid";
+
+    weekCalendar.style.display = "none";
+
+    dayCalendar.style.display = "none";
+
+    habitTracker.style.display = "none";
+
+    weekdaysRow.style.display = "grid";
+
+    monthViewButton.classList.add("active");
+
+    weekViewButton.classList.remove("active");
+
+    dayViewButton.classList.remove("active");
+
+    habitViewButton.classList.remove("active");
+
+    renderCalendar();
+
 }
 
-function renderGoals(){
-  const grid = document.getElementById("goalsGrid");
-  if(!financialGoals.length){
-    grid.innerHTML = `<div class="goal-empty">🎯 No financial goals yet.<br><br>Add your first goal and start planning your future.</div>`;
-    return;
-  }
 
-  grid.innerHTML = financialGoals.map(goal => {
-    const target = Number(goal.target) || 0;
-    const saved = Number(goal.saved) || 0;
-    const remaining = Math.max(target - saved, 0);
-    const percent = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
-    const monthly = calculateMonthlyGoalAmount(remaining, goal.targetDate);
+function showWeekView(){
 
-    return `
-      <div class="goal-card">
-        <div class="goal-card-head">
-          <div>
-            <div class="goal-icon">${escapeHTML(goal.icon)}</div>
-            <div class="goal-name">${escapeHTML(goal.name)}</div>
-            <div class="goal-category">${escapeHTML(goal.category)}</div>
-          </div>
-          <div>
-            <div class="goal-priority">${escapeHTML(goal.priority)}</div>
-            <button class="goal-delete" onclick="deleteGoal('${escapeJS(goal.id)}')" title="Delete goal">✕</button>
-          </div>
-        </div>
-        <div class="goal-amounts">
-          <div><div class="muted">SAVED</div><div class="goal-saved">${money(saved)}</div></div>
-          <div style="text-align:right;"><div class="muted">TARGET</div><div class="goal-target">${money(target)}</div></div>
-        </div>
-        <div class="goal-progress"><div class="goal-progress-bar" style="width:${percent}%;"></div></div>
-        <div class="goal-percent">${percent.toFixed(1)}% complete</div>
-        <div class="goal-details">
-          <div class="goal-detail-row"><span>Remaining</span><strong>${money(remaining)}</strong></div>
-          ${goal.targetDate ? `<div class="goal-detail-row"><span>Target date</span><strong>${formatDate(goal.targetDate)}</strong></div>` : ""}
-          ${monthly !== null ? `<div class="goal-detail-row"><span>Monthly target</span><strong>${money(monthly)}</strong></div>` : ""}
-          ${goal.description ? `<div class="muted" style="margin-top:8px;">${escapeHTML(goal.description)}</div>` : ""}
-        </div>
-      </div>
-    `;
-  }).join("");
+    calendar.style.display = "none";
+
+    weekCalendar.style.display = "grid";
+
+    dayCalendar.style.display = "none";
+
+    habitTracker.style.display = "none";
+
+    weekdaysRow.style.display = "none";
+
+    monthViewButton.classList.remove("active");
+
+    weekViewButton.classList.add("active");
+
+    dayViewButton.classList.remove("active");
+
+    habitViewButton.classList.remove("active");
+
+    renderWeekCalendar();
+    renderDayCalendar();
+
 }
 
-function calculateMonthlyGoalAmount(remaining, targetDate){
-  if(remaining <= 0 || !targetDate) return remaining <= 0 ? 0 : null;
-  const today = new Date();
-  const target = new Date(targetDate + "T00:00:00");
-  if(target <= today) return remaining;
-  const months = (target.getFullYear() - today.getFullYear()) * 12 + (target.getMonth() - today.getMonth());
-  const monthsRemaining = Math.max(months, 1);
-  return remaining / monthsRemaining;
+
+function showDayView(){
+
+    calendar.style.display = "none";
+
+    weekCalendar.style.display = "none";
+
+    dayCalendar.style.display = "grid";
+
+    habitTracker.style.display = "none";
+
+    weekdaysRow.style.display = "none";
+
+    monthViewButton.classList.remove("active");
+
+    weekViewButton.classList.remove("active");
+
+    dayViewButton.classList.add("active");
+
+    habitViewButton.classList.remove("active");
+
+    renderDayCalendar();
+
 }
 
-function deleteGoal(id){
-  if(!confirm("Delete this financial goal?")) return;
-  financialGoals = financialGoals.filter(goal => String(goal.id) !== String(id));
-  saveGoals();
-  renderGoals();
+
+function showHabitView(){
+
+    calendar.style.display = "none";
+
+    weekCalendar.style.display = "none";
+
+    dayCalendar.style.display = "none";
+
+    habitTracker.style.display = "block";
+
+    weekdaysRow.style.display = "none";
+
+    monthViewButton.classList.remove("active");
+
+    weekViewButton.classList.remove("active");
+
+    dayViewButton.classList.remove("active");
+
+    habitViewButton.classList.add("active");
+
+    renderHabitTracker();
+
 }
 
-/* =========================================================
-   GROCERY LIST (NEW)
-   ========================================================= */
-function addGroceryItem(){
-  const nameInput = document.getElementById("groceryName");
-  const priceInput = document.getElementById("groceryPrice");
-  const name = nameInput.value.trim();
-  const price = Number(priceInput.value);
 
-  if(!name){ alert("Please enter an item name."); return; }
-  if(!price || price < 0){ alert("Please enter a valid price."); return; }
+monthViewButton.addEventListener(
+    "click",
+    showMonthView
+);
 
-  groceries.push({
-    id: "GR-" + Date.now() + "-" + Math.random().toString(36).substring(2,7),
-    name, price, checked:false
-  });
 
-  saveGroceries();
-  nameInput.value = "";
-  priceInput.value = "";
-  nameInput.focus();
-  renderGroceries();
-}
+weekViewButton.addEventListener(
+    "click",
+    showWeekView
+);
 
-function toggleGroceryItem(id){
-  const g = groceries.find(item => String(item.id) === String(id));
-  if(g){ g.checked = !g.checked; saveGroceries(); renderGroceries(); }
-}
 
-function deleteGroceryItem(id){
-  groceries = groceries.filter(item => String(item.id) !== String(id));
-  saveGroceries();
-  renderGroceries();
-}
+dayViewButton.addEventListener(
+    "click",
+    showDayView
+);
 
-function renderGroceries(){
-  const list = document.getElementById("groceryList");
 
-  if(!groceries.length){
-    list.innerHTML = `<div class="empty">No grocery items yet. Add one above.</div>`;
-  }else{
-    list.innerHTML = groceries.map(g => `
-      <div class="grocery-item ${g.checked ? "checked" : ""}">
-        <input type="checkbox" class="grocery-checkbox" ${g.checked ? "checked" : ""} onchange="toggleGroceryItem('${escapeJS(g.id)}')">
-        <span class="grocery-name">${escapeHTML(g.name)}</span>
-        <span class="grocery-price">${money(g.price)}</span>
-        <button class="delete" onclick="deleteGroceryItem('${escapeJS(g.id)}')">✕</button>
-      </div>
-    `).join("");
-  }
+habitViewButton.addEventListener(
+    "click",
+    showHabitView
+);
 
-  const listTotal = groceries.reduce((sum,g) => sum + Number(g.price), 0);
-  const checkedTotal = groceries.filter(g => g.checked).reduce((sum,g) => sum + Number(g.price), 0);
-  document.getElementById("groceryListTotal").textContent = money(listTotal);
-  document.getElementById("groceryCheckedTotal").textContent = money(checkedTotal);
-}
+/* =========================================
+   SMART SCHEDULING
+========================================= */
 
-/* =========================================================
-   MODAL OUTSIDE-CLICK
-   ========================================================= */
-function bindOutsideClick(modalId, closeFn){
-  const el = document.getElementById(modalId);
-  if(el){
-    el.addEventListener("click", function(event){
-      if(event.target === this) closeFn();
+const smartModal =
+    document.getElementById("smartModal");
+
+const smartTitle =
+    document.getElementById("smartTitle");
+
+const smartDuration =
+    document.getElementById("smartDuration");
+
+const smartDate =
+    document.getElementById("smartDate");
+
+const smartPreference =
+    document.getElementById("smartPreference");
+
+const smartResult =
+    document.getElementById("smartResult");
+
+
+/* OPEN SMART SCHEDULE */
+
+document
+.getElementById("smartScheduleButton")
+.addEventListener(
+    "click",
+    function(){
+
+        smartModal.classList.add("show");
+
+        smartDate.value =
+            getDateKey(new Date());
+
+        smartTitle.focus();
+
+    }
+);
+
+
+/* CLOSE SMART SCHEDULE */
+
+document
+.getElementById("closeSmartModal")
+.addEventListener(
+    "click",
+    function(){
+
+        smartModal.classList.remove("show");
+
+        smartResult.innerHTML = "";
+
+    }
+);
+
+
+/* =========================================
+   FIND AVAILABLE TIME
+========================================= */
+
+function findAvailableTime(
+    date,
+    duration,
+    preference
+){
+
+    const dayEvents =
+        getEventsForDate(date);
+
+
+    const busyTimes = [];
+
+
+    /* Get existing timed events */
+
+    dayEvents.forEach(function(event){
+
+        if(!event.start){
+            return;
+        }
+
+
+        const startParts =
+            event.start.split(":");
+
+
+        const start =
+            Number(startParts[0]) * 60 +
+            Number(startParts[1]);
+
+
+        let end;
+
+
+        if(event.end){
+
+            const endParts =
+                event.end.split(":");
+
+
+            end =
+                Number(endParts[0]) * 60 +
+                Number(endParts[1]);
+
+        }else{
+
+            /* No end time = assume 1 hour */
+
+            end =
+                start + 60;
+
+        }
+
+
+        busyTimes.push({
+            start:start,
+            end:end
+        });
+
     });
-  }
+
+
+    /* Sort events by starting time */
+
+    busyTimes.sort(function(a,b){
+
+        return a.start - b.start;
+
+    });
+
+
+    /* =====================================
+       CHOOSE TIME WINDOW
+    ===================================== */
+
+    let windowStart = 8 * 60;
+    let windowEnd = 22 * 60;
+
+
+    if(preference === "morning"){
+
+        windowStart = 6 * 60;
+        windowEnd = 12 * 60;
+
+    }
+
+
+    if(preference === "afternoon"){
+
+        windowStart = 12 * 60;
+        windowEnd = 17 * 60;
+
+    }
+
+
+    if(preference === "evening"){
+
+        windowStart = 17 * 60;
+        windowEnd = 21 * 60;
+
+    }
+
+
+    if(preference === "night"){
+
+        windowStart = 20 * 60;
+        windowEnd = 23 * 60;
+
+    }
+
+
+    /* =====================================
+       SEARCH FOR FREE TIME
+    ===================================== */
+
+    let possibleTime =
+        windowStart;
+
+
+    for(
+        let i = 0;
+        i <= busyTimes.length;
+        i++
+    ){
+
+        const nextBusy =
+            busyTimes[i];
+
+
+        const availableEnd =
+            nextBusy
+            ? nextBusy.start
+            : windowEnd;
+
+
+        /* Is there enough free time? */
+
+        if(
+            availableEnd -
+            possibleTime
+            >= duration
+        ){
+
+            return {
+
+                start:
+                    possibleTime,
+
+                end:
+                    possibleTime + duration
+
+            };
+
+        }
+
+
+        /* Move past the existing event */
+
+        if(nextBusy){
+
+            possibleTime =
+                Math.max(
+                    possibleTime,
+                    nextBusy.end
+                );
+
+        }
+
+    }
+
+
+    return null;
+
 }
-bindOutsideClick("transactionModal", closeModal);
-bindOutsideClick("goalModal", closeGoalModal);
 
-window.addEventListener("resize", function(){ drawChart(getFiltered()); });
 
-/* =========================================================
-   START
-   ========================================================= */
-(function init(){
-  loadAll();
+/* =========================================
+   FORMAT TIME
+========================================= */
 
-  document.getElementById("currencySelect").value = currency;
+function formatTime(minutes){
 
-  updateAllocationLabels();
-  renderGoals();
-  renderGroceries();
-  render();
-})();
-</script>
-</body>
-</html>
+    let hour =
+        Math.floor(minutes / 60);
+
+    let minute =
+        minutes % 60;
+
+
+    const period =
+        hour >= 12
+        ? "PM"
+        : "AM";
+
+
+    let displayHour =
+        hour % 12;
+
+
+    if(displayHour === 0){
+
+        displayHour = 12;
+
+    }
+
+
+    return (
+        displayHour +
+        ":" +
+        String(minute).padStart(2,"0") +
+        " " +
+        period
+    );
+
+}
+
+
+/* =========================================
+   FIND BEST TIME BUTTON
+========================================= */
+
+document
+.getElementById("findSmartTime")
+.addEventListener(
+    "click",
+    function(){
+
+        const title =
+            smartTitle.value.trim();
+
+
+        const date =
+            smartDate.value;
+
+
+        const duration =
+            Number(
+                smartDuration.value
+            );
+
+
+        const preference =
+   
