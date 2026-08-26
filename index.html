@@ -21,10 +21,11 @@ header{background:var(--dark);color:#fff;padding:25px 20px}
 .subtitle{margin-top:6px;color:#d8c8bd}
 .container{max-width:1400px;margin:auto;padding:22px}
 .dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:18px}
+.expense-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:18px}
 .card{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 5px 18px rgba(50,30,20,.06)}
 .label{color:var(--muted);font-size:11px;font-weight:bold;letter-spacing:.5px}
 .value{font-size:27px;font-weight:900;margin-top:7px}
-.balance{color:var(--brown)} .income{color:var(--green)} .expense{color:var(--red)} .saving-color{color:var(--green)}
+.balance{color:var(--brown)} .income{color:var(--green)} .expense{color:var(--red)} .saving-color{color:var(--green)} .planned-color{color:var(--terracotta-light)}
 .section{background:var(--white);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:20px}
 .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .section-head h2{margin:0;font-size:20px}
@@ -135,14 +136,14 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
 .grocery-total-label{font-size:10px;color:var(--muted);font-weight:bold;text-transform:uppercase}
 .grocery-total-value{font-size:19px;font-weight:900;color:var(--brown)}
 @media(max-width:950px){
-  .dashboard,.allocation,.cat-grid{grid-template-columns:repeat(2,1fr)}
+  .dashboard,.allocation,.cat-grid,.expense-grid{grid-template-columns:repeat(2,1fr)}
   .item-grid{grid-template-columns:repeat(3,1fr)}
   .two{grid-template-columns:1fr}
   .goals-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
   .container{padding:12px}
-  .dashboard,.allocation,.cat-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .dashboard,.allocation,.cat-grid,.expense-grid{grid-template-columns:1fr 1fr;gap:9px}
   .card,.alloc,.cat-card{padding:14px}
   .value{font-size:20px}
   .item-grid{grid-template-columns:1fr 1fr}
@@ -204,10 +205,30 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
   </div>
 
   <div class="dashboard">
-    <div class="card"><div class="label">REMAINING BALANCE</div><div class="value balance" id="balance">₱0.00</div></div>
     <div class="card"><div class="label">TOTAL CASH IN</div><div class="value income" id="totalIn">₱0.00</div></div>
-    <div class="card"><div class="label">TOTAL CASH OUT</div><div class="value expense" id="totalOut">₱0.00</div></div>
+    <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div></div>
+    <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value planned-color" id="plannedExpenses">₱0.00</div></div>
+    <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div></div>
+    <div class="card"><div class="label">REMAINING BALANCE (ACTUAL)</div><div class="value balance" id="balanceActual">₱0.00</div></div>
+    <div class="card"><div class="label">REMAINING BALANCE (TOTAL)</div><div class="value balance" id="balanceTotal">₱0.00</div></div>
     <div class="card"><div class="label">SAVINGS ALLOCATED</div><div class="value saving-color" id="totalSavings">₱0.00</div></div>
+  </div>
+  <div class="muted" style="margin:-10px 0 18px 4px;">Actual = expenses dated today or earlier • Planned = expenses dated after today</div>
+
+  <!-- EXPENSE SUMMARY (NEW) -->
+  <div class="section">
+    <div class="section-head">
+      <h2>Expense Summary</h2>
+      <span class="muted">Based on today's date</span>
+    </div>
+    <div class="expense-grid">
+      <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Cash Out dated today or earlier</div></div>
+      <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value" style="color:var(--gold);" id="plannedExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Cash Out dated after today</div></div>
+      <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Actual + Planned</div></div>
+    </div>
   </div>
 
   <!-- LIFE PLANNER -->
@@ -731,16 +752,26 @@ function getFiltered(){
 function render(){
   updateFilterOptions();
 
-  let totalIn = 0, totalOut = 0;
+  const todayStr = new Date().toISOString().split("T")[0];
+  let totalIn = 0, actualExpenses = 0, plannedExpenses = 0;
   transactions.forEach(t => {
-    if(t.type === "income") totalIn += Number(t.amount);
-    else totalOut += Number(t.amount);
+    if(t.type === "income"){
+      totalIn += Number(t.amount);
+    }else{
+      if(t.date <= todayStr) actualExpenses += Number(t.amount);
+      else plannedExpenses += Number(t.amount);
+    }
   });
-  const balance = totalIn - totalOut;
+  const totalExpenses = actualExpenses + plannedExpenses;
+  const balanceActual = totalIn - actualExpenses;
+  const balanceTotal = totalIn - totalExpenses;
 
   document.getElementById("totalIn").textContent = money(totalIn);
-  document.getElementById("totalOut").textContent = money(totalOut);
-  document.getElementById("balance").textContent = money(balance);
+  document.getElementById("actualExpenses").textContent = money(actualExpenses);
+  document.getElementById("plannedExpenses").textContent = money(plannedExpenses);
+  document.getElementById("totalExpenses").textContent = money(totalExpenses);
+  document.getElementById("balanceActual").textContent = money(balanceActual);
+  document.getElementById("balanceTotal").textContent = money(balanceTotal);
 
   const a = allocation(totalIn);
   document.getElementById("needsAllocation").textContent = money(a.needs);
@@ -755,7 +786,26 @@ function render(){
   renderMonthly();
   renderYearly();
   renderCategoryRemaining(totalIn);
+  renderExpenseSummary();
   drawChart(filtered);
+}
+
+/* =========================================================
+   EXPENSE SUMMARY (NEW)
+   ========================================================= */
+function renderExpenseSummary(){
+  const todayStr = new Date().toISOString().split("T")[0];
+  let actual = 0, planned = 0;
+
+  transactions.forEach(t => {
+    if(t.type !== "expense") return;
+    if(t.date <= todayStr) actual += Number(t.amount);
+    else planned += Number(t.amount);
+  });
+
+  document.getElementById("actualExpenses").textContent = money(actual);
+  document.getElementById("plannedExpenses").textContent = money(planned);
+  document.getElementById("totalExpenses").textContent = money(actual + planned);
 }
 
 /* =========================================================
