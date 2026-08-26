@@ -216,19 +216,37 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
 
   <!-- EXPENSE SUMMARY (NEW) -->
   <div class="section">
-    <div class="section-head">
-      <h2>Expense Summary</h2>
-      <span class="muted">Based on today's date</span>
+  <div class="section-head">
+    <h2>Expense Summary</h2>
+    <span class="muted">Based on today's date</span>
+  </div>
+
+  <div class="expense-grid">
+    <div class="card">
+      <div class="label">ACTUAL EXPENSES</div>
+      <div class="value expense" id="summaryActualExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Cash Out dated today or earlier
+      </div>
     </div>
-    <div class="expense-grid">
-      <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Cash Out dated today or earlier</div></div>
-      <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value" style="color:var(--gold);" id="plannedExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Cash Out dated after today</div></div>
-      <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Actual + Planned</div></div>
+
+    <div class="card">
+      <div class="label">PLANNED EXPENSES</div>
+      <div class="value" style="color:var(--gold);" id="summaryPlannedExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Cash Out dated after today
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label">TOTAL EXPENSES</div>
+      <div class="value expense" id="summaryTotalExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Actual + Planned
+      </div>
     </div>
   </div>
+</div>
 
   <!-- LIFE PLANNER -->
   <div class="section">
@@ -810,38 +828,33 @@ document.getElementById("tithesAllocation").textContent = money(a.tithes);
 /* =========================================================
    EXPENSE SUMMARY
    ========================================================= */
-<div class="section">
-  <div class="section-head">
-    <h2>Expense Summary</h2>
-    <span class="muted">Based on today's date</span>
-  </div>
+function renderExpenseSummary(){
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  <div class="expense-grid">
-    <div class="card">
-      <div class="label">ACTUAL EXPENSES</div>
-      <div class="value expense" id="summaryActualExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Cash Out dated today or earlier
-      </div>
-    </div>
+  let actual = 0;
+  let planned = 0;
 
-    <div class="card">
-      <div class="label">PLANNED EXPENSES</div>
-      <div class="value" style="color:var(--gold);" id="summaryPlannedExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Cash Out dated after today
-      </div>
-    </div>
+  transactions.forEach(t => {
+    if(t.type !== "expense") return;
 
-    <div class="card">
-      <div class="label">TOTAL EXPENSES</div>
-      <div class="value expense" id="summaryTotalExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Actual + Planned
-      </div>
-    </div>
-  </div>
-</div>
+    const amount = Number(t.amount) || 0;
+
+    if(t.date <= todayStr){
+      actual += amount;
+    }else{
+      planned += amount;
+    }
+  });
+
+  const total = actual + planned;
+
+  const summaryActual = document.getElementById("summaryActualExpenses");
+  const summaryPlanned = document.getElementById("summaryPlannedExpenses");
+  const summaryTotal = document.getElementById("summaryTotalExpenses");
+
+  if(summaryActual) summaryActual.textContent = money(actual);
+  if(summaryPlanned) summaryPlanned.textContent = money(planned);
+  if(summaryTotal) summaryTotal.textContent = money(total);
   
 /* =========================================================
    CATEGORY REMAINING (NEW)
