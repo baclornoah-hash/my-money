@@ -792,11 +792,10 @@ function render(){
   document.getElementById("balanceTotal").textContent = money(balanceTotal);
 
   const a = allocation(totalIn);
-  document.getElementById("needsAllocation").textContent = money(a.needs);
-  document.getElementById("wantsAllocation").textContent = money(a.wants);
-  document.getElementById("savingsAllocation").textContent = money(a.savings);
-  document.getElementById("tithesAllocation").textContent = money(a.tithes);
-  document.getElementById("totalSavings").textContent = money(a.savings);
+document.getElementById("needsAllocation").textContent = money(a.needs);
+document.getElementById("wantsAllocation").textContent = money(a.wants);
+document.getElementById("savingsAllocation").textContent = money(a.savings);
+document.getElementById("tithesAllocation").textContent = money(a.tithes);
 
   const filtered = getFiltered();
   renderTransactions(filtered);
@@ -809,23 +808,41 @@ function render(){
 }
 
 /* =========================================================
-   EXPENSE SUMMARY (NEW)
+   EXPENSE SUMMARY
    ========================================================= */
-function renderExpenseSummary(){
-  const todayStr = new Date().toISOString().split("T")[0];
-  let actual = 0, planned = 0;
+<div class="section">
+  <div class="section-head">
+    <h2>Expense Summary</h2>
+    <span class="muted">Based on today's date</span>
+  </div>
 
-  transactions.forEach(t => {
-    if(t.type !== "expense") return;
-    if(t.date <= todayStr) actual += Number(t.amount);
-    else planned += Number(t.amount);
-  });
+  <div class="expense-grid">
+    <div class="card">
+      <div class="label">ACTUAL EXPENSES</div>
+      <div class="value expense" id="summaryActualExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Cash Out dated today or earlier
+      </div>
+    </div>
 
-  document.getElementById("actualExpenses").textContent = money(actual);
-  document.getElementById("plannedExpenses").textContent = money(planned);
-  document.getElementById("totalExpenses").textContent = money(actual + planned);
-}
+    <div class="card">
+      <div class="label">PLANNED EXPENSES</div>
+      <div class="value" style="color:var(--gold);" id="summaryPlannedExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Cash Out dated after today
+      </div>
+    </div>
 
+    <div class="card">
+      <div class="label">TOTAL EXPENSES</div>
+      <div class="value expense" id="summaryTotalExpenses">₱0.00</div>
+      <div class="muted" style="margin-top:6px;">
+        Actual + Planned
+      </div>
+    </div>
+  </div>
+</div>
+  
 /* =========================================================
    CATEGORY REMAINING (NEW)
    ========================================================= */
