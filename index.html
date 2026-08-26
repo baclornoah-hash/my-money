@@ -205,48 +205,31 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
   </div>
 
   <div class="dashboard">
-    <div class="card"><div class="label">TOTAL INCOME</div><div class="value income" id="totalIn">₱0.00</div></div>
+    <div class="card"><div class="label">TOTAL CASH IN</div><div class="value income" id="totalIn">₱0.00</div></div>
     <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div></div>
     <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value planned-color" id="plannedExpenses">₱0.00</div></div>
     <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div></div>
     <div class="card"><div class="label">REMAINING BALANCE (ACTUAL)</div><div class="value balance" id="balanceActual">₱0.00</div></div>
     <div class="card"><div class="label">REMAINING BALANCE (TOTAL)</div><div class="value balance" id="balanceTotal">₱0.00</div></div>
+    <div class="card"><div class="label">SAVINGS ALLOCATED</div><div class="value saving-color" id="totalSavings">₱0.00</div></div>
   </div>
   <div class="muted" style="margin:-10px 0 18px 4px;">Actual = expenses dated today or earlier • Planned = expenses dated after today</div>
 
   <!-- EXPENSE SUMMARY (NEW) -->
   <div class="section">
-  <div class="section-head">
-    <h2>Expense Summary</h2>
-    <span class="muted">Based on today's date</span>
-  </div>
-
-  <div class="expense-grid">
-    <div class="card">
-      <div class="label">ACTUAL EXPENSES</div>
-      <div class="value expense" id="summaryActualExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Cash Out dated today or earlier
-      </div>
+    <div class="section-head">
+      <h2>Expense Summary</h2>
+      <span class="muted">Based on today's date</span>
     </div>
-
-    <div class="card">
-      <div class="label">PLANNED EXPENSES</div>
-      <div class="value" style="color:var(--gold);" id="summaryPlannedExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Cash Out dated after today
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="label">TOTAL EXPENSES</div>
-      <div class="value expense" id="summaryTotalExpenses">₱0.00</div>
-      <div class="muted" style="margin-top:6px;">
-        Actual + Planned
-      </div>
+    <div class="expense-grid">
+      <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Cash Out dated today or earlier</div></div>
+      <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value" style="color:var(--gold);" id="plannedExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Cash Out dated after today</div></div>
+      <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div>
+        <div class="muted" style="margin-top:6px;">Actual + Planned</div></div>
     </div>
   </div>
-</div>
 
   <!-- LIFE PLANNER -->
   <div class="section">
@@ -314,28 +297,9 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
   </div>
 
   <div class="section">
-   <div class="section">
-  <div class="section-head">
-    <h2>Expense Breakdown</h2>
-    <span class="muted" id="expenseBreakdownCount">0 expenses</span>
+    <div class="section-head"><h2>Expense Breakdown</h2><span class="muted">See exactly how much goes to every item</span></div>
+    <div class="item-grid" id="expenseBreakdown"></div>
   </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Item</th>
-          <th>Category</th>
-          <th>Description</th>
-          <th>Amount</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="expenseBreakdown"></tbody>
-    </table>
-  </div>
-</div> 
 
   <div class="two">
     <div class="section">
@@ -810,10 +774,11 @@ function render(){
   document.getElementById("balanceTotal").textContent = money(balanceTotal);
 
   const a = allocation(totalIn);
-document.getElementById("needsAllocation").textContent = money(a.needs);
-document.getElementById("wantsAllocation").textContent = money(a.wants);
-document.getElementById("savingsAllocation").textContent = money(a.savings);
-document.getElementById("tithesAllocation").textContent = money(a.tithes);
+  document.getElementById("needsAllocation").textContent = money(a.needs);
+  document.getElementById("wantsAllocation").textContent = money(a.wants);
+  document.getElementById("savingsAllocation").textContent = money(a.savings);
+  document.getElementById("tithesAllocation").textContent = money(a.tithes);
+  document.getElementById("totalSavings").textContent = money(a.savings);
 
   const filtered = getFiltered();
   renderTransactions(filtered);
@@ -826,36 +791,23 @@ document.getElementById("tithesAllocation").textContent = money(a.tithes);
 }
 
 /* =========================================================
-   EXPENSE SUMMARY
+   EXPENSE SUMMARY (NEW)
    ========================================================= */
 function renderExpenseSummary(){
   const todayStr = new Date().toISOString().split("T")[0];
-
-  let actual = 0;
-  let planned = 0;
+  let actual = 0, planned = 0;
 
   transactions.forEach(t => {
     if(t.type !== "expense") return;
-
-    const amount = Number(t.amount) || 0;
-
-    if(t.date <= todayStr){
-      actual += amount;
-    }else{
-      planned += amount;
-    }
+    if(t.date <= todayStr) actual += Number(t.amount);
+    else planned += Number(t.amount);
   });
 
-  const total = actual + planned;
+  document.getElementById("actualExpenses").textContent = money(actual);
+  document.getElementById("plannedExpenses").textContent = money(planned);
+  document.getElementById("totalExpenses").textContent = money(actual + planned);
+}
 
-  const summaryActual = document.getElementById("summaryActualExpenses");
-  const summaryPlanned = document.getElementById("summaryPlannedExpenses");
-  const summaryTotal = document.getElementById("summaryTotalExpenses");
-
-  if(summaryActual) summaryActual.textContent = money(actual);
-  if(summaryPlanned) summaryPlanned.textContent = money(planned);
-  if(summaryTotal) summaryTotal.textContent = money(total);
-  
 /* =========================================================
    CATEGORY REMAINING (NEW)
    ========================================================= */
@@ -954,42 +906,18 @@ function renderTransactions(list){
    ========================================================= */
 function renderBreakdown(list){
   const box = document.getElementById("expenseBreakdown");
-  const count = document.getElementById("expenseBreakdownCount");
+  const totals = {};
+  expenseItems.forEach(item => { totals[item] = 0; });
 
-  const expenses = list
-    .filter(t => t.type === "expense")
-    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  list.forEach(t => {
+    if(t.type !== "expense") return;
+    if(!Object.prototype.hasOwnProperty.call(totals, t.item)) totals[t.item] = 0;
+    totals[t.item] += Number(t.amount);
+  });
 
-  count.textContent = expenses.length + 
-    (expenses.length === 1 ? " expense" : " expenses");
-
-  if(!expenses.length){
-    box.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty">
-          No expense transactions found.
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  box.innerHTML = expenses.map(t => `
-    <tr>
-      <td>${formatDate(t.date)}</td>
-      <td><strong>${escapeHTML(t.item)}</strong></td>
-      <td>${escapeHTML(t.category)}</td>
-      <td>${escapeHTML(t.description)}</td>
-      <td class="red-text">-${money(t.amount)}</td>
-      <td>
-        <button class="btn btn-light" onclick="editTransaction('${escapeJS(t.id)}')">
-          Edit
-        </button>
-        <button class="delete" onclick="deleteTransaction('${escapeJS(t.id)}')">
-          ✕
-        </button>
-      </td>
-    </tr>
+  const entries = Object.entries(totals).sort((a,b) => b[1] - a[1]);
+  box.innerHTML = entries.map(([item,total]) => `
+    <div class="item-card"><strong>${escapeHTML(item)}</strong><span>${money(total)}</span></div>
   `).join("");
 }
 
@@ -1166,88 +1094,6 @@ function drawChart(list){
   ctx.fillStyle = "#b85f3d"; ctx.fillText("● Cash Out", left+85, 18);
 }
 
-/* =========================================================
-   EDIT TRANSACTION
-   ========================================================= */
-  function editTransaction(id){
-  const transaction = transactions.find(t => String(t.id) === String(id));
-
-  if(!transaction) return;
-
-  document.getElementById("date").value = transaction.date;
-  document.getElementById("amount").value = transaction.amount;
-  document.getElementById("category").value = transaction.category === "Cash In"
-    ? "Needs"
-    : transaction.category;
-  document.getElementById("item").value = transaction.item;
-  document.getElementById("description").value = transaction.description;
-
-  setTransactionType(transaction.type);
-  checkTreatingOthers();
-
-  const button = document.querySelector("#transactionModal .btn-primary");
-  button.textContent = "SAVE CHANGES";
-  button.onclick = function(){
-    saveEditedTransaction(id);
-  };
-
-  openModal();
-}
-
-  function saveEditedTransaction(id){
-  const transaction = transactions.find(t => String(t.id) === String(id));
-
-  if(!transaction) return;
-
-  const date = document.getElementById("date").value;
-  const amount = Number(document.getElementById("amount").value);
-  const category = document.getElementById("category").value;
-  const item = document.getElementById("item").value.trim();
-  const person = document.getElementById("person").value.trim();
-  const description = document.getElementById("description").value.trim();
-
-  if(!date){
-    alert("Please enter a date.");
-    return;
-  }
-
-  if(!amount || amount <= 0){
-    alert("Please enter a valid amount.");
-    return;
-  }
-
-  if(!item){
-    alert("Please select or type an item.");
-    return;
-  }
-
-  let finalDescription = description || item;
-
-  if(item.toLowerCase() === "treating others" && person){
-    finalDescription = "Treating " + person +
-      (description ? " — " + description : "");
-  }
-
-  transaction.date = date;
-  transaction.amount = amount;
-  transaction.type = currentType;
-  transaction.category = currentType === "income"
-    ? "Cash In"
-    : category;
-  transaction.item = item;
-  transaction.description = finalDescription;
-
-  saveData();
-  resetForm();
-  closeModal();
-
-  const button = document.querySelector("#transactionModal .btn-primary");
-  button.textContent = "ADD TRANSACTION";
-  button.onclick = addTransaction;
-
-  render();
-}
-  
 /* =========================================================
    DELETE TRANSACTION
    ========================================================= */
