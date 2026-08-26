@@ -205,31 +205,14 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
   </div>
 
   <div class="dashboard">
-    <div class="card"><div class="label">TOTAL CASH IN</div><div class="value income" id="totalIn">₱0.00</div></div>
+    <div class="card"><div class="label">TOTAL INCOME</div><div class="value income" id="totalIn">₱0.00</div></div>
     <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div></div>
     <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value planned-color" id="plannedExpenses">₱0.00</div></div>
     <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div></div>
     <div class="card"><div class="label">REMAINING BALANCE (ACTUAL)</div><div class="value balance" id="balanceActual">₱0.00</div></div>
     <div class="card"><div class="label">REMAINING BALANCE (TOTAL)</div><div class="value balance" id="balanceTotal">₱0.00</div></div>
-    <div class="card"><div class="label">SAVINGS ALLOCATED</div><div class="value saving-color" id="totalSavings">₱0.00</div></div>
   </div>
   <div class="muted" style="margin:-10px 0 18px 4px;">Actual = expenses dated today or earlier • Planned = expenses dated after today</div>
-
-  <!-- EXPENSE SUMMARY (NEW) -->
-  <div class="section">
-    <div class="section-head">
-      <h2>Expense Summary</h2>
-      <span class="muted">Based on today's date</span>
-    </div>
-    <div class="expense-grid">
-      <div class="card"><div class="label">ACTUAL EXPENSES</div><div class="value expense" id="actualExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Cash Out dated today or earlier</div></div>
-      <div class="card"><div class="label">PLANNED EXPENSES</div><div class="value" style="color:var(--gold);" id="plannedExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Cash Out dated after today</div></div>
-      <div class="card"><div class="label">TOTAL EXPENSES</div><div class="value expense" id="totalExpenses">₱0.00</div>
-        <div class="muted" style="margin-top:6px;">Actual + Planned</div></div>
-    </div>
-  </div>
 
   <!-- LIFE PLANNER -->
   <div class="section">
@@ -778,7 +761,6 @@ function render(){
   document.getElementById("wantsAllocation").textContent = money(a.wants);
   document.getElementById("savingsAllocation").textContent = money(a.savings);
   document.getElementById("tithesAllocation").textContent = money(a.tithes);
-  document.getElementById("totalSavings").textContent = money(a.savings);
 
   const filtered = getFiltered();
   renderTransactions(filtered);
