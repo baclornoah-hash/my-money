@@ -1547,5 +1547,14 @@ window.addEventListener("resize", function(){ drawChart(getFiltered()); });
   render();
 })();
 </script>
+
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+  
 </body>
 </html>
