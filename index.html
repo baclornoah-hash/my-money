@@ -477,6 +477,21 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
 </div>
 
 <script>
+  // ============================================================
+// SUPABASE
+// ============================================================
+
+const SUPABASE_URL = "https://wavyvxzreelxiseswqmm.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_66Yq6vVOkvWZOoxVNMA0xA_s_ne_chL";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+let currentUser = null;
 /* =========================================================
    STATE
    ========================================================= */
