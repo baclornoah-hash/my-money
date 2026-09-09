@@ -183,6 +183,61 @@ th{color:var(--muted);font-size:10px;text-transform:uppercase}
 
 <div class="container">
 
+  <!-- ============================================================
+     CLOUD ACCOUNT
+============================================================ -->
+
+<div class="section" id="authSection">
+  <div class="section-head">
+    <div>
+      <h2>☁️ Cloud Account</h2>
+      <div class="muted" id="authStatus">Not signed in</div>
+    </div>
+  </div>
+
+  <div id="authLoggedOut">
+    <div class="form-grid">
+      <div>
+        <label>Email</label>
+        <input
+          type="email"
+          id="authEmail"
+          placeholder="Enter your email"
+        >
+      </div>
+
+      <div>
+        <label>Password</label>
+        <input
+          type="password"
+          id="authPassword"
+          placeholder="Enter your password"
+        >
+      </div>
+    </div>
+
+    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn primary" onclick="signUp()">
+        Create Account
+      </button>
+
+      <button class="btn" onclick="signIn()">
+        Log In
+      </button>
+    </div>
+  </div>
+
+  <div id="authLoggedIn" style="display:none;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <span id="authUserEmail" class="muted"></span>
+
+      <button class="btn" onclick="signOut()">
+        Log Out
+      </button>
+    </div>
+  </div>
+</div>
+  
   <div class="section" style="margin-bottom:15px;">
     <div class="section-head">
       <h2>Currency</h2>
@@ -493,6 +548,129 @@ const supabaseClient = window.supabase.createClient(
 );
 
 let currentUser = null;
+
+  // ============================================================
+// AUTHENTICATION
+// ============================================================
+
+async function signUp(){
+
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if(!email || !password){
+    alert("Please enter your email and password.");
+    return;
+  }
+
+  if(password.length < 6){
+    alert("Password must be at least 6 characters.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+
+  if(error){
+    console.error("Sign up failed:", error);
+    alert(error.message);
+    return;
+  }
+
+  if(data.session){
+    alert("Account created successfully.");
+  }else{
+    alert(
+      "Account created. Please check your email to verify your account before logging in."
+    );
+  }
+}
+
+
+async function signIn(){
+
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+
+  if(!email || !password){
+    alert("Please enter your email and password.");
+    return;
+  }
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    console.error("Login failed:", error);
+    alert(error.message);
+    return;
+  }
+
+  console.log("Logged in:", data.user.email);
+}
+
+
+async function signOut(){
+
+  const { error } = await supabaseClient.auth.signOut();
+
+  if(error){
+    console.error("Logout failed:", error);
+    alert(error.message);
+    return;
+  }
+
+  currentUser = null;
+
+  updateAuthUI();
+
+  alert("Logged out.");
+}
+
+
+function updateAuthUI(){
+
+  const loggedOut = document.getElementById("authLoggedOut");
+  const loggedIn = document.getElementById("authLoggedIn");
+  const status = document.getElementById("authStatus");
+  const email = document.getElementById("authUserEmail");
+
+  if(currentUser){
+
+    loggedOut.style.display = "none";
+    loggedIn.style.display = "block";
+
+    status.textContent = "Signed in";
+    email.textContent = currentUser.email;
+
+  }else{
+
+    loggedOut.style.display = "block";
+    loggedIn.style.display = "none";
+
+    status.textContent = "Not signed in";
+    email.textContent = "";
+  }
+}
+
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+
+    console.log("Auth state:", event);
+
+    currentUser = session?.user || null;
+
+    updateAuthUI();
+
+  }
+);
+  
 /* =========================================================
    STATE
    ========================================================= */
