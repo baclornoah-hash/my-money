@@ -596,6 +596,105 @@ function queueCloudSave(){
 }
 
   // ============================================================
+// LOAD DATA FROM SUPABASE
+// ============================================================
+
+async function loadCloudData(){
+
+  if(!currentUser) return;
+
+  try{
+
+    const { data, error } = await supabaseClient
+      .from("my_money_data")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if(error){
+      console.error("Cloud load failed:", error);
+      return;
+    }
+
+    // --------------------------------------------------------
+    // EXISTING CLOUD DATA
+    // --------------------------------------------------------
+
+    if(data){
+
+      transactions =
+        Array.isArray(data.transactions)
+          ? data.transactions
+          : [];
+
+      financialGoals =
+        Array.isArray(data.financial_goals)
+          ? data.financial_goals
+          : [];
+
+      groceries =
+        Array.isArray(data.groceries)
+          ? data.groceries
+          : [];
+
+      currency =
+        data.currency || "PHP";
+
+      allocationSettings =
+        data.allocation_settings || {
+          needs:50,
+          wants:30,
+          savings:10,
+          tithes:10
+        };
+
+      // Update local cache
+      storageSet("transactions", transactions);
+      storageSet("goals", financialGoals);
+      storageSet("groceries", groceries);
+      storageSet("currency", currency);
+      storageSet("allocationSettings", allocationSettings);
+
+      refreshDashboard();
+
+      console.log("☁️ Cloud data loaded");
+
+      return;
+    }
+
+    // --------------------------------------------------------
+    // NO CLOUD DATA YET
+    // --------------------------------------------------------
+
+    const hasLocalData =
+      transactions.length > 0 ||
+      financialGoals.length > 0 ||
+      groceries.length > 0;
+
+    if(hasLocalData){
+
+      console.log(
+        "☁️ No cloud data found. Migrating local data..."
+      );
+
+      await saveCloudData();
+
+      console.log("☁️ Local data migrated to Supabase");
+
+    }else{
+
+      console.log("☁️ No existing data found");
+
+      await saveCloudData();
+    }
+
+  }catch(error){
+
+    console.error("Cloud data error:", error);
+
+  }
+}
+  // ============================================================
 // AUTHENTICATION
 // ============================================================
 
@@ -713,6 +812,12 @@ supabaseClient.auth.onAuthStateChange(
     currentUser = session?.user || null;
 
     updateAuthUI();
+
+    if(currentUser){
+
+      await loadCloudData();
+
+    }
 
   }
 );
