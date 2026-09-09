@@ -550,6 +550,52 @@ const supabaseClient = window.supabase.createClient(
 let currentUser = null;
 
   // ============================================================
+// SUPABASE CLOUD DATA
+// ============================================================
+
+let cloudSavePromise = Promise.resolve();
+
+async function saveCloudData(){
+
+  if(!currentUser) return;
+
+  const payload = {
+    user_id: currentUser.id,
+    transactions: transactions,
+    financial_goals: financialGoals,
+    groceries: groceries,
+    currency: currency,
+    allocation_settings: allocationSettings,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await supabaseClient
+    .from("my_money_data")
+    .upsert(payload, {
+      onConflict: "user_id"
+    });
+
+  if(error){
+    console.error("Cloud save failed:", error);
+    return;
+  }
+
+  console.log("☁️ Data saved to Supabase");
+}
+
+
+function queueCloudSave(){
+
+  if(!currentUser) return;
+
+  cloudSavePromise = cloudSavePromise
+    .then(() => saveCloudData())
+    .catch(error => {
+      console.error("Cloud save queue failed:", error);
+    });
+}
+
+  // ============================================================
 // AUTHENTICATION
 // ============================================================
 
@@ -749,22 +795,27 @@ function loadAll(){
 
 function saveData(){
   storageSet("transactions", transactions);
+  queueCloudSave();
 }
 
 function saveGoals(){
   storageSet("goals", financialGoals);
+  queueCloudSave();
 }
 
 function saveGroceries(){
   storageSet("groceries", groceries);
+  queueCloudSave();
 }
 
 function saveCurrency(){
   storageSet("currency", currency);
+  queueCloudSave();
 }
 
 function saveAllocationSettings(){
   storageSet("allocationSettings", allocationSettings);
+  queueCloudSave();
 }
 
 function changeCurrency(value){
