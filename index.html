@@ -555,6 +555,20 @@ let currentUser = null;
 
 let cloudSavePromise = Promise.resolve();
 
+  function queueCloudSave(){
+
+  if(!currentUser){
+    console.warn("☁️ Cloud save queued but no user is logged in.");
+    return;
+  }
+
+  cloudSavePromise = cloudSavePromise
+    .then(() => saveCloudData())
+    .catch(error => {
+      console.error("❌ Cloud save queue failed:", error);
+    });
+}
+
 async function saveCloudData(){
 
   if(!currentUser){
@@ -2025,31 +2039,21 @@ function refreshDashboard(){
   renderGroceries();
 
 }
-  
-/* =========================================================
+
+
 // ============================================================
 // START
 // ============================================================
 
 (async function init(){
 
-  // ----------------------------------------------------------
-  // 1. Load local cache immediately
-  // ----------------------------------------------------------
-
+  // 1. Load local cache first
   loadAll();
 
-  // ----------------------------------------------------------
-  // 2. Show local data immediately
-  // ----------------------------------------------------------
-
-  updateAllocationLabels();
+  // 2. Render local data immediately
   refreshDashboard();
 
-  // ----------------------------------------------------------
   // 3. Check Supabase session
-  // ----------------------------------------------------------
-
   const {
     data: { session },
     error
@@ -2067,10 +2071,7 @@ function refreshDashboard(){
 
   updateAuthUI();
 
-  // ----------------------------------------------------------
-  // 4. Load cloud data ONCE
-  // ----------------------------------------------------------
-
+  // 4. Load cloud data once
   if(currentUser){
 
     console.log(
