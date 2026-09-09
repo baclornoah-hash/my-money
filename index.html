@@ -557,7 +557,13 @@ let cloudSavePromise = Promise.resolve();
 
 async function saveCloudData(){
 
-  if(!currentUser) return;
+  if(!currentUser){
+
+    console.warn("☁️ Save skipped: no logged-in user.");
+
+    return;
+
+  }
 
   const payload = {
     user_id: currentUser.id,
@@ -569,35 +575,43 @@ async function saveCloudData(){
     updated_at: new Date().toISOString()
   };
 
-  const { error } = await supabaseClient
+  console.log("☁️ Saving cloud data:", {
+    user: currentUser.email,
+    transactions: transactions.length,
+    goals: financialGoals.length,
+    groceries: groceries.length
+  });
+
+  const { data, error } = await supabaseClient
     .from("my_money_data")
     .upsert(payload, {
       onConflict: "user_id"
-    });
+    })
+    .select();
 
   if(error){
-    console.error("Cloud save failed:", error);
-    return;
+
+    console.error("❌ Cloud save failed:", error);
+
+    alert(
+      "Cloud save failed:\n\n" +
+      error.message
+    );
+
+    return false;
+
   }
 
-  console.log("☁️ Data saved to Supabase");
+  console.log("☁️ Data saved successfully:", data);
+
+  return true;
 }
 
-
-function queueCloudSave(){
-
-  if(!currentUser) return;
-
-  cloudSavePromise = cloudSavePromise
-    .then(() => saveCloudData())
-    .catch(error => {
-      console.error("Cloud save queue failed:", error);
-    });
-}
-
-  // ============================================================
+// ============================================================
 // LOAD DATA FROM SUPABASE
 // ============================================================
+
+let cloudDataLoaded = false;
 
 async function loadCloudData(){
 
@@ -617,76 +631,95 @@ async function loadCloudData(){
     }
 
     // --------------------------------------------------------
-    // EXISTING CLOUD DATA
+    // NO CLOUD ROW
     // --------------------------------------------------------
 
-    if(data){
+    if(!data){
 
-      transactions =
-        Array.isArray(data.transactions)
-          ? data.transactions
-          : [];
+      console.log("☁️ No cloud record found.");
 
-      financialGoals =
-        Array.isArray(data.financial_goals)
-          ? data.financial_goals
-          : [];
+      // If local data exists, migrate it.
+      const hasLocalData =
+        transactions.length > 0 ||
+        financialGoals.length > 0 ||
+        groceries.length > 0;
 
-      groceries =
-        Array.isArray(data.groceries)
-          ? data.groceries
-          : [];
+      if(hasLocalData){
 
-      currency =
-        data.currency || "PHP";
+        console.log("☁️ Migrating local data to Supabase...");
 
-      allocationSettings =
-        data.allocation_settings || {
-          needs:50,
-          wants:30,
-          savings:10,
-          tithes:10
-        };
+        await saveCloudData();
 
-      // Update local cache
-      storageSet("transactions", transactions);
-      storageSet("goals", financialGoals);
-      storageSet("groceries", groceries);
-      storageSet("currency", currency);
-      storageSet("allocationSettings", allocationSettings);
+      }else{
 
+        // Create an empty cloud record.
+        await saveCloudData();
+
+      }
+
+      cloudDataLoaded = true;
       refreshDashboard();
-
-      console.log("☁️ Cloud data loaded");
-
       return;
     }
 
     // --------------------------------------------------------
-    // NO CLOUD DATA YET
+    // CLOUD ROW EXISTS
     // --------------------------------------------------------
 
-    const hasLocalData =
-      transactions.length > 0 ||
-      financialGoals.length > 0 ||
-      groceries.length > 0;
+    console.log("☁️ Cloud record found.");
 
-    if(hasLocalData){
+    /*
+      IMPORTANT:
+      Only replace local data with cloud data when the
+      corresponding cloud field is actually a valid array.
 
-      console.log(
-        "☁️ No cloud data found. Migrating local data..."
-      );
+      This prevents an empty/malformed cloud field from
+      destroying local data.
+    */
 
-      await saveCloudData();
-
-      console.log("☁️ Local data migrated to Supabase");
-
-    }else{
-
-      console.log("☁️ No existing data found");
-
-      await saveCloudData();
+    if(Array.isArray(data.transactions)){
+      transactions = data.transactions;
+      storageSet("transactions", transactions);
     }
+
+    if(Array.isArray(data.financial_goals)){
+      financialGoals = data.financial_goals;
+      storageSet("goals", financialGoals);
+    }
+
+    if(Array.isArray(data.groceries)){
+      groceries = data.groceries;
+      storageSet("groceries", groceries);
+    }
+
+    if(data.currency){
+      currency = data.currency;
+      storageSet("currency", currency);
+    }
+
+    if(
+      data.allocation_settings &&
+      typeof data.allocation_settings === "object"
+    ){
+      allocationSettings = {
+        needs: Number(data.allocation_settings.needs ?? 50),
+        wants: Number(data.allocation_settings.wants ?? 30),
+        savings: Number(data.allocation_settings.savings ?? 10),
+        tithes: Number(data.allocation_settings.tithes ?? 10)
+      };
+
+      storageSet(
+        "allocationSettings",
+        allocationSettings
+      );
+    }
+
+    cloudDataLoaded = true;
+
+    updateAllocationLabels();
+    refreshDashboard();
+
+    console.log("☁️ Cloud data loaded successfully.");
 
   }catch(error){
 
@@ -694,6 +727,7 @@ async function loadCloudData(){
 
   }
 }
+  
   // ============================================================
 // AUTHENTICATION
 // ============================================================
@@ -804,8 +838,12 @@ function updateAuthUI(){
 }
 
 
+// ============================================================
+// AUTH STATE LISTENER
+// ============================================================
+
 supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
+  (event, session) => {
 
     console.log("Auth state:", event);
 
@@ -813,11 +851,12 @@ supabaseClient.auth.onAuthStateChange(
 
     updateAuthUI();
 
-    if(currentUser){
+    /*
+      Do not load cloud data here.
 
-      await loadCloudData();
-
-    }
+      init() handles the initial session and cloud loading.
+      This prevents two simultaneous loadCloudData() calls.
+    */
 
   }
 );
@@ -1971,34 +2010,84 @@ bindOutsideClick("goalModal", closeGoalModal);
 
 window.addEventListener("resize", function(){ drawChart(getFiltered()); });
 
+// ============================================================
+// REFRESH ENTIRE DASHBOARD
+// ============================================================
+
+function refreshDashboard(){
+
+  updateAllocationLabels();
+
+  render();
+
+  renderGoals();
+
+  renderGroceries();
+
+}
+  
 /* =========================================================
-   START
-   ========================================================= */
+// ============================================================
+// START
+// ============================================================
+
 (async function init(){
 
-  // Load local cache first
+  // ----------------------------------------------------------
+  // 1. Load local cache immediately
+  // ----------------------------------------------------------
+
   loadAll();
 
-  // Render immediately so the existing app still works
+  // ----------------------------------------------------------
+  // 2. Show local data immediately
+  // ----------------------------------------------------------
+
+  updateAllocationLabels();
   refreshDashboard();
 
-  // Check existing Supabase session
+  // ----------------------------------------------------------
+  // 3. Check Supabase session
+  // ----------------------------------------------------------
+
   const {
-    data: { session }
+    data: { session },
+    error
   } = await supabaseClient.auth.getSession();
+
+  if(error){
+
+    console.error("Session check failed:", error);
+
+    return;
+
+  }
 
   currentUser = session?.user || null;
 
   updateAuthUI();
 
-  // If logged in, load the cloud data
+  // ----------------------------------------------------------
+  // 4. Load cloud data ONCE
+  // ----------------------------------------------------------
+
   if(currentUser){
 
+    console.log(
+      "☁️ Logged in as:",
+      currentUser.email
+    );
+
     await loadCloudData();
+
+  }else{
+
+    console.log("☁️ No active cloud session.");
 
   }
 
 })();
+
 </script>
 </body>
 </html>
