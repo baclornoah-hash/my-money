@@ -1974,15 +1974,30 @@ window.addEventListener("resize", function(){ drawChart(getFiltered()); });
 /* =========================================================
    START
    ========================================================= */
-(function init(){
+(async function init(){
+
+  // Load local cache first
   loadAll();
 
-  document.getElementById("currencySelect").value = currency;
+  // Render immediately so the existing app still works
+  refreshDashboard();
 
-  updateAllocationLabels();
-  renderGoals();
-  renderGroceries();
-  render();
+  // Check existing Supabase session
+  const {
+    data: { session }
+  } = await supabaseClient.auth.getSession();
+
+  currentUser = session?.user || null;
+
+  updateAuthUI();
+
+  // If logged in, load the cloud data
+  if(currentUser){
+
+    await loadCloudData();
+
+  }
+
 })();
 </script>
 </body>
